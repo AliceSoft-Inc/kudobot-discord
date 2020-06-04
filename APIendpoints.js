@@ -1,7 +1,9 @@
 const express = require('express');			//npm install express
 
 const app = express();
-const root = 'D:/dev';
+//const root = 'D:/dev';
+
+const fileutil = require("./fileUtil.js");
 
 app.get('/api', (req, res) =>{
     res.json({
