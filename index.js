@@ -1,13 +1,34 @@
-
-
+const express = require('express');			//npm install express
+const discord = require("discord.js");		//npm install discord.js
 const botconfig = require("./botconfig.json");
-const Discord = require("discord.js");
 
-const bot = new Discord.Client({disableEveryone: true});
+
+const bot = new discord.Client({disableEveryone: true});
+
+const app = express();
+const root = 'D:/dev';
+
+app.get('/api', (req, res) =>{
+    res.json({
+        message: 'Welcome to the api'
+    });
+});
+
+app.post('/api/posts', (req, res) => {
+    res.json({
+        message: 'Post created...'
+    });
+});
+
+/*app.get('/sftsfa', (req, res) => {
+   res.sendFile('./sftsfa/sftsfa.github.io/index.html', {root}); 
+});*/ // local test only
+
+app.listen(5180, () => console.log('node testing server instance started on port 5180'));
 
 bot.on("ready", async() => {
 	console.log(`${bot.user.username} 是真的傻屌`);
-	bot.user.setGame("快乐风男");
+	bot.user.setGame("劫，剑姬，刀妹");
 });
 
 bot.on("message", async message => {
