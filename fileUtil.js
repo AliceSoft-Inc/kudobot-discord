@@ -1,7 +1,18 @@
 var fs=require('fs');
-var data=fs.readFileSync('kudosToken.json', 'utf8');
-var words=JSON.parse(data);
-console.log(words);
 
-function() getPlayerToken{
+class FileUtil {
+	constructor(){
+		this.data = JSON.parse(fs.readFileSync('kudosToken.json', 'utf8'));
+	}
+
+	updateData(){
+		return JSON.parse(fs.readFileSync('kudosToken.json', 'utf8'));
+	}
+
+	getPlayerToken(playerName){
+		updateData();
+		return data[playerName];
+	}
 }
+
+module.exports = FileUtil

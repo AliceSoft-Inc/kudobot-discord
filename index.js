@@ -1,5 +1,5 @@
-const api = require("./APIendpoints.js");
-const botCP = require("./botControlPlane.js");
+const api = require("./APIEndpoints.js");
+const botCP = require("./BotControlPlane.js");
 
 console.log(
 "Author: Jerry Dang" + '\n' +
