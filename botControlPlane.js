@@ -75,7 +75,7 @@ Current Available:
 				`);
 		
 		default:
-			return message.channel.send("Undefinded action. Try /help for more available options.");
+			return message.channel.send("Undefined action. Try /help for more available options.");
 	}
 });
 
