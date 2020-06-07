@@ -1,22 +1,17 @@
-var fs=require('fs'); //npm install fs
+const DataUtil = require("./DataUtil.js");
+const fileName = './database/kudoDesc.json';
+const fileEncoding = 'utf8';
 
 var instance = (function() {
-  var data = JSON.parse(fs.readFileSync('kudosToken.json', 'utf8'));
-
-	function readData(){ //private
-		this.data = JSON.parse(fs.readFileSync('kudosToken.json', 'utf8'));
-	}
-	
-	function writeData(){ //private
-		return;
-	}
-	
+  let dataUtil = new DataUtil(fileName, fileEncoding);
+  var data = dataUtil.read();
+  
 	function getData() { //test use
 		return data;
 	}
 	
 	function getPlayerToken(playerName) {
-		readData();
+		data = dataUtil.read();
 		if(!data[playerName])
 			return "error: player " + playerName + " does not exist.";
 		
@@ -24,7 +19,7 @@ var instance = (function() {
     }
 	
 	function setPlayerToken(playerName, amount) {
-		readData();
+		data = dataUtil.read();
 		if(!data[playerName])
 			return "error: player " + playerName + " does not exist.";
 		
@@ -32,7 +27,7 @@ var instance = (function() {
 			return "error: please enter a valid number for amount.";
 		
 		data[playerName] = parseInt(amount); //TODO: exception handle
-		writeData();
+		dataUtil.write(data);
 		return amount;
 	}
 	

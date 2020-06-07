@@ -3,7 +3,8 @@ const express = require('express');			//npm install express
 const app = express();
 //const root = 'D:/dev';
 
-const kudoDescData = require("./KudoDescDataInstance.js");
+//const kudoDescData = require("./KudoDescDataInstance.js");
+const kudoPtData = require("./KudoPtDataInstance.js");
 // const fileUtilSingleton = require("./FileUtilSingleton.js");
 
 app.get('/api', async (req, res) =>{
@@ -30,6 +31,37 @@ app.get('/setPlayerToken', async (req, res) => {
 	let amount = req.query.amount;
 	res.json({
 		message: kudoDescData.setPlayerToken(playerName, amount)
+	});
+});
+
+app.get('/getpt', async (req, res) => {
+    let playerName = req.query.playerName;
+	res.json({
+		message: kudoPtData.getPlayerPt(playerName)
+	});
+});
+
+app.get('/setpt', async (req, res) => {
+	let playerName = req.query.playerName;
+	let amount = req.query.amount;
+	res.json({
+		message: kudoPtData.setPlayerPt(playerName, amount)
+	});
+});
+
+app.get('/addpt', async (req, res) => {
+	let playerName = req.query.playerName;
+	let amount = req.query.amount;
+	res.json({
+		message: kudoPtData.addPlayerPt(playerName, amount)
+	});
+});
+
+app.get('/deductpt', async (req, res) => {
+	let playerName = req.query.playerName;
+	let amount = req.query.amount;
+	res.json({
+		message: kudoPtData.deductPlayerPt(playerName, amount)
 	});
 });
 
