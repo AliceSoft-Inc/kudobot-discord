@@ -1,38 +1,46 @@
 const discord = require("discord.js");		//npm install discord.js
 const botconfig = require("./botconfig.json");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
-//const kudoAdminData = require("./FileUtilSingleton.js"); //kudo desc
-//const kudoPtData = require("./FileUtilSingleton.js"); //kudo desc
+//const kudoAdminData = require("./FileUtilSingleton.js"); //kudo admin
+const kudoPtData = require("./KudoPtDataInstance.js"); //kudo pt
 const guildID = '719042359651729418'; // TODO: currently hard coded for test server. 
 
 const client = new discord.Client({disableEveryone: true});
 
+const debugMode = true;  // Debug flag
+
 client.on("ready", async() => {
 	client.user.setActivity("劫，剑姬，刀妹");
 	// console.log(client.guilds);
-	console.log(client.guilds.cache.keys().next().value); // Get guild ID here
-	// kudoAdminData.setGuild(client.guilds.cache.get(guildID));
+	if (debugMode) console.log("First guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
+
+	// TODO: transfer guild data to kudoAdmin.
+
+	// kudoAdminData.setGuildID(client.guilds.cache.keys().next().value); // id => kudoAdminData
+	// kudoAdminData.setGuildData(client.guilds.cache.get(guildID));  // guild => kudoAdminData 
 	
 
 });
 
 client.on("message", async message => {
 	//console.log(message);
-	console.log(
+
+	if(message.author.bot) {
+		console.log("Handler: Bot message. Ignore.");
+		return;
+	}
+
+	if(!message.guild.available) {
+		console.log("Handler: Source server unavailable. Ignore.");
+		return;
+	}
+
+
+	if (debugMode) console.log(
 		"\nMessage received from server: \033[1;34m" + message.guild.name + "\033[0m" +
 		"\nSender: \033[1;31m" + message.author.username + "\033[0m" +
 		"\nContent: \"" + message.content + "\""
 	)
-
-	if(!message.guild.available) {
-		console.log("Handler: Server unavailable. Ignore.");
-		return;
-	}
-
-	if(message.author.bot) {
-		console.log("Handler: Bot message received. Ignore.");
-		return;
-	}
 
 	//if(message.channel.type === "dm") return;
 	
@@ -48,21 +56,23 @@ client.on("message", async message => {
 
 	switch (cmd) {
 		case `${prefix}kudoPt`:
-			return message.channel.send(handleKudoPtReturn(messageArray));
-			break;
+			return message.channel.send(handleKudoPtReturn(messageArray, message.author.id));
 		
 		case `${prefix}thumbupTest`:
-			return message.react('👍');
-			break;
+			return message.react('👍');	
 
 		case `${prefix}help`:
 			return message.channel.send(
 				`
 Current Available:
-/kudoPt --get <Player Name> --endorse <Player Name>
+/kudoPt 
+	--get <Player Name> 
+	--endorse <Player Name> <Description>
+	--add <Player Name> <Add Pt>
+	--set <Player Name> <Set Pt>
+	--reset <Player Name>
 /thumbupTest
 				`);
-			break;
 		
 		default:
 			return message.channel.send("Undefinded action. Try /help for more available options.");
@@ -82,24 +92,51 @@ function handleShadiaoReturn(inputMessage){
 	}else return "Undefined Action.";
 }
 
-function handleKudoPtReturn(inputMessage) {
-	if(!inputMessage[1])
-		return "Not valid command, do you mean: \n/kudoPt get <Player Name>\n" +
-		"/kudoToken endorse <Player Name>";
-	
-	if(inputMessage[1] === "get"){
-		if(!inputMessage[2])
-			return "error: please enter a valid player name";
-		return kudoDescData.getPlayerToken(inputMessage[2]);
-	}else if(inputMessage[1] === "endorse"){
-		if(!inputMessage[2])
-			return "error: please enter a valid player name";
+function handleKudoPtReturn(inputMessage, authorID) {
+	switch (inputMessage[1]) {
+		case "get":
+			if(!inputMessage[2])
+				return "error: please enter a valid player name";
+			return kudoPtData.getPlayerPt(inputMessage[2]);
+
+		// TODO: next case need kudoDesc methods.
+
+		case "endorse":
+			if(!inputMessage[2] || !inputMessage[3])
+				return "error: please enter valild arguments";
+			
+			// return kudoPtData.addPlayerPt(inputMessage[2], 1) + kudoDescData.addDesc(inputMessage[2], inputMessage[3]);
+			return kudoPtData.addPlayerPt(inputMessage[2], 1);	
+
+		// TODO: next 3 cases need kudoAdmin methods.
 		
-		var a = kudoDescData.getPlayerToken(inputMessage[2]) + 1;
-		return kudoDescData.setPlayerToken(inputMessage[2], a);
-	}else{
-		return "Not valid command, do you mean: \n/kudoPt get <Player Name>\n" +
-		"/kudoPt endorse <Player Name>";
+		case "add":
+			if(!inputMessage[2] || !inputMessage[3])
+				return "error: please enter valild arguments";
+			// if (kudoAdminData.isAdmin(authorID)) 
+			//  	return kudoPtData.addPlayerPt(inputMessage[2], inputMessage[3]);
+			return "Permission Denied: Please contact admin.";
+
+		case "set":
+			if(!inputMessage[2] || !inputMessage[3])
+				return "error: please enter valild arguments";
+			// if (kudoAdminData.isAdmin(authorID)) 
+			//  	return kudoPtData.setPlayerPt(inputMessage[2], inputMessage[3]);
+			return "Permission Denied: Please contact admin.";
+
+		case "reset":
+			if(!inputMessage[2])
+				return "error: please enter a valid player name";
+			// if (kudoAdminData.isAdmin(authorID)) 
+			// 	return kudoPtData.setPlayerPt(inputMessage[2], 0);  // TODO: return a notification instead of fixed 0 number
+			return "Permission Denied: Please contact admin.";
+
+	
+		default:
+			return "Not valid command, do you mean: \n/kudoPt get <Player Name>\n" +
+			"/kudoPt endorse <Player Name> <Description>\n" + 
+			"/kudoPt add <Player Name> <Add Pt> (Admin)\n" +
+			"/kudoPt set <Player Name> <Set Pt> (Admin)";
 	}
 }
 
