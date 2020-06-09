@@ -20,48 +20,48 @@ app.post('/api/posts', async (req, res) => {
 });
 
 app.get('/getPlayerToken', async (req, res) => {
-    let playerName = req.query.playerName;
+    let playerID = req.query.playerID;
 	res.json({
-		message: kudoDescData.getPlayerToken(playerName)
+		message: kudoDescData.getPlayerToken(playerID)
 	});
 });
 
 app.get('/setPlayerToken', async (req, res) => {
-	let playerName = req.query.playerName;
+	let playerID = req.query.playerID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoDescData.setPlayerToken(playerName, amount)
+		message: kudoDescData.setPlayerToken(playerID, amount)
 	});
 });
 
 app.get('/getpt', async (req, res) => {
-    let playerName = req.query.playerName;
+    let playerID = req.query.playerID;
 	res.json({
-		message: kudoPtData.getPlayerPt(playerName)
+		message: kudoPtData.getPlayerPt(playerID)
 	});
 });
 
 app.get('/setpt', async (req, res) => {
-	let playerName = req.query.playerName;
+	let playerID = req.query.playerID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoPtData.setPlayerPt(playerName, amount)
+		message: kudoPtData.setPlayerPt(playerID, amount)
 	});
 });
 
 app.get('/addpt', async (req, res) => {
-	let playerName = req.query.playerName;
+	let playerID = req.query.playerID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoPtData.addPlayerPt(playerName, amount)
+		message: kudoPtData.addPlayerPt(playerID, amount)
 	});
 });
 
 app.get('/deductpt', async (req, res) => {
-	let playerName = req.query.playerName;
+	let playerID = req.query.playerID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoPtData.deductPlayerPt(playerName, amount)
+		message: kudoPtData.deductPlayerPt(playerID, amount)
 	});
 });
 

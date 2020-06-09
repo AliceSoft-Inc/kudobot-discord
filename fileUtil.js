@@ -9,9 +9,9 @@ class FileUtil {
 		return JSON.parse(fs.readFileSync('kudosToken.json', 'utf8'));
 	}
 
-	getPlayerToken(playerName){
+	getUserToken(userID){
 		updateData();
-		return data[playerName];
+		return data[userID];
 	}
 }
 
