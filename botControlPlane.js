@@ -1,11 +1,11 @@
 const discord = require("discord.js");		//npm install discord.js
 const botconfig = require("./botconfig.json");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
-//const kudoAdminData = require("./FileUtilSingleton.js"); //kudo admin
+const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
 const kudoPtData = require("./KudoPtDataInstance.js"); //kudo pt
 
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
-const guildID_baixue = '493946649014566943';
+// const guildID_baixue = '493946649014566943';
 
 const client = new discord.Client({disableEveryone: true});
 
@@ -16,20 +16,25 @@ client.on("ready", async() => {
 	// console.log(client.guilds);
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
 	
-	console.log(client.guilds.cache.get(guildID_test).roles);
+	// console.log(client.guilds.cache.get(guildID_test).roles);
 	// console.log(client.guilds.cache.get(guildID_test).roles.cache);
 	// console.log(client.guilds.cache.get(guildID_test).members.cache);
 
 	// Populate admin list here.
 	if (debugMode) console.log("\nCurrent guild role list:");
-	client.guilds.cache.get(guildID_test).roles.cache.forEach( member => {
-		if (debugMode) console.log("	ID: " + member.id +", Role: " + member.name);
+	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
+		if (debugMode) console.log("	Role ID: " + role.id + ", Role: " + role.name);
 
 		// TODO: revised role name here. Need further kudoAdminData support.
-		// if (member.name === "testRole1") 
-		// 	kudoAdminData.assignAdmin(member.id);
+		if (role.name === "testRole1") {
+			if (debugMode) console.log(`\nAdmin under ${role.name} :`);
+			role.members.forEach(member => {
+				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
+				kudoAdminData.assignAdmin(member.user.id); member.user.id
+			});
+		}
+			
 	});
-
 	
 	// TODO: transfer guild data to kudoAdmin?
 
@@ -74,24 +79,42 @@ client.on("message", async message => {
 	switch (cmd) {
 		case `${prefix}kudoPt`:
 			return message.channel.send(handleKudoPtReturn(messageArray, message.author.id));
+
+		case `${prefix}kudoAdmin`:
+			if (kudoAdminData.isAdmin(message.author.id))
+				return message.channel.send(handleKudoAdminReturn(messageArray, message.author.id));
+			else return "Permission Denied: Please contact admin.";
 		
 		case `${prefix}thumbupTest`:
 			return message.react('👍');	
 		
-		case `${prefix}endorse`:
+		case `${prefix}kudos`:
 			return message.channel.send(handleEndorseReturn(messageArray, message.author.id));
 
 		case `${prefix}help`:
-			return message.channel.send(
+			// Check premission
+			if (kudoAdminData.isAdmin(message.author.id))
+				return message.channel.send(
+					`
+Current Available:
+/kudoAdmin 
+	--assignAdmin <@User>
+	--rmAdmin <@User>
+/kudoPt 
+	--get <@User> 
+	--add <@User> <Add Pt>
+	--set <@User> <Set Pt>
+	--reset <@User>
+/thumbupTest
+/kudos <@User> <Description>
+				`);
+			else return message.channel.send(
 				`
 Current Available:
 /kudoPt 
-	--get <Player Name> 
-	--add <Player Name> <Add Pt>
-	--set <Player Name> <Set Pt>
-	--reset <Player Name>
+	--get <@User> 
 /thumbupTest
-/endorse <@Player Name> <Description>
+/kudos <@User> <Description>
 				`);
 		
 		default:
@@ -100,6 +123,28 @@ Current Available:
 });
 
 function handleKudoDescReturn(inputMessage){
+
+}
+
+function handleKudoAdminReturn(inputMessage, authorID) {
+	if (debugMode) console.log("\n\033[1;34mAdmin Command: \033[0m" + inputMessage[1] + " by user " + authorID+".");
+	
+	if (!inputMessage[1] || !inputMessage[2])
+		return "error: please enter valild arguments";
+
+	var target_id = inputMessage[2].slice(2, -1);
+
+	switch (inputMessage[1]) {
+		case "assignAdmin":
+			return kudoAdminData.assignAdmin(target_id);
+
+		case "rmAdmin":
+			return kudoAdminData.rmAdmin(target_id);
+
+		default:
+			return "Not a valid command, do you mean: \n/kudoAdmin assignAdmin <@User>\n" +
+				"/kudoAdmin rmAdmin <@User>\n";
+	}
 
 }
 
@@ -114,50 +159,57 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if (target_id === authorID) return "Sorry, you cannot endorse yourself.";
 	
 	// TODO: next case need kudoDesc methods.
-	// return kudoPtData.addPlayerPt(target_id, 1) + kudoDescData.addDesc(target_id, inputMessage[2]);
+	// return kudoPtData.addUserPt(target_id, 1) + kudoDescData.addDesc(target_id, inputMessage[2]);
 
-	return kudoPtData.addPlayerPt(target_id, 1);
+	return kudoPtData.addUserPt(target_id, 1);
 
 }
 
 function handleKudoPtReturn(inputMessage, authorID) {
-	// Urgent TODO: replace all user name to user id
+	if (!inputMessage[2])
+		return "error: please enter a valid user name";
+
+	var target_id = inputMessage[2].slice(2, -1);
 
 	switch (inputMessage[1]) {
 		case "get":
-			if(!inputMessage[2])
-				return "error: please enter a valid player name";
-			return kudoPtData.getPlayerPt(inputMessage[2]);
+			return kudoPtData.getUserPt(target_id);
 
 		// TODO: next 3 cases need kudoAdmin methods.
 		
 		case "add":
-			if(!inputMessage[2] || !inputMessage[3])
-				return "error: please enter valild arguments";
-			// if (kudoAdminData.isAdmin(authorID)) 
-			//  	return kudoPtData.addPlayerPt(inputMessage[2], inputMessage[3]);
+			if(!inputMessage[3])
+				return "error: please enter desired Pt number.";
+
+			if (kudoAdminData.isAdmin(authorID)) 
+				return kudoPtData.addUserPt(target_id, inputMessage[3]);
+				 
 			return "Permission Denied: Please contact admin.";
 
 		case "set":
-			if(!inputMessage[2] || !inputMessage[3])
-				return "error: please enter valild arguments";
-			// if (kudoAdminData.isAdmin(authorID)) 
-			//  	return kudoPtData.setPlayerPt(inputMessage[2], inputMessage[3]);
+			if(!inputMessage[3])
+				return "error: please enter desired Pt number.";
+			if (kudoAdminData.isAdmin(authorID)) 
+				return kudoPtData.setUserPt(target_id, inputMessage[3]);
+				 
 			return "Permission Denied: Please contact admin.";
 
 		case "reset":
-			if(!inputMessage[2])
-				return "error: please enter a valid player name";
-			// if (kudoAdminData.isAdmin(authorID)) 
-			// 	return kudoPtData.setPlayerPt(inputMessage[2], 0);  // TODO: return a notification instead of fixed 0 number
+			//console.log(kudoAdminData.getData());
+			console.log(kudoAdminData.isAdmin(authorID));
+			if (kudoAdminData.isAdmin(authorID)) 
+				return kudoPtData.setUserPt(target_id, 0);  // TODO: return a notification instead of fixed 0 number
+
 			return "Permission Denied: Please contact admin.";
 
 	
 		default:
-			return "Not valid command, do you mean: \n/kudoPt get <Player Name>\n" +
-			"/kudoPt endorse <Player Name> <Description>\n" + 
-			"/kudoPt add <Player Name> <Add Pt> (Admin)\n" +
-			"/kudoPt set <Player Name> <Set Pt> (Admin)";
+			if (kudoAdminData.isAdmin(authorID))
+				return "Not a valid command, do you mean: \n/kudoPt get <@User>\n" +
+					"/kudoPt reset <@User>\n" + // Admin
+					"/kudoPt add <@User> <Add Pt>\n" + // Admin
+					"/kudoPt set <@User> <Set Pt>"; // Admin
+			else return "Not a valid command, do you mean: \n/kudoPt get <@User>";
 	}
 }
 

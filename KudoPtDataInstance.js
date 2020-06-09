@@ -10,60 +10,60 @@ var instance = (function() {
 		return data;
 	}
 	
-	function getPlayerPt(playerName) {
+	function getUserPt(userID) {
 		data = dataUtil.read();
-		if(!verifyPlayerName(playerName))
-			return "error: player " + playerName + " does not exist.";
+		if(!verifyUserID(userID))
+			return "error: User " + userID + " does not exist.";
 		
-		return data[playerName]; //TODO: exception handle
+		return data[userID]; //TODO: exception handle
     }
 	
-	function setPlayerPt(playerName, amount) {
+	function setUserPt(userID, amount) {
 		data = dataUtil.read();
-		if(!verifyPlayerName(playerName))
-			return "error: player " + playerName + " does not exist.";
+		if(!verifyUserID(userID))
+			return "error: User " + userID + " does not exist.";
 		
 		if(!verifyPtAmount(amount))
 			return "error: please enter a valid number for amount.";
 		
-		data[playerName] = parseInt(amount); //TODO: exception handle
+		data[userID] = parseInt(amount); //TODO: exception handle
 		dataUtil.write(data);
-		return data[playerName];
+		return data[userID];
 	}
 	
-	function addPlayerPt(playerName, amount) {
+	function addUserPt(userID, amount) {
 		data = dataUtil.read();
-		if(!verifyPlayerName(playerName))
-			return "error: player " + playerName + " does not exist.";
+		if(!verifyUserID(userID))
+			return "error: User " + userID + " does not exist.";
 		
 		if(!verifyPtAmount(amount))
 			return "error: please enter a valid number for amount.";
 		
-		data[playerName] += parseInt(amount); //TODO: exception handle
+		data[userID] += parseInt(amount); //TODO: exception handle
 		dataUtil.write(data);
-		return data[playerName]
+		return data[userID]
 	}
 	
-	function deductPlayerPt(playerName, amount) {
+	function deductUserPt(userID, amount) {
 		data = dataUtil.read();
-		if(!verifyPlayerName(playerName))
-			return "error: player " + playerName + " does not exist.";
+		if(!verifyUserID(userID))
+			return "error: User " + userID + " does not exist.";
 		
 		if(!verifyPtAmount(amount))
 			return "error: please enter a valid number for amount.";
 		
 		var amountInt = parseInt(amount);
 		
-		if(data[playerName] - amountInt < 0)
+		if(data[userID] - amountInt < 0)
 			return "will result in a negative balance, rejected."
 		
-		data[playerName] -= amountInt; //TODO: exception handle
+		data[userID] -= amountInt; //TODO: exception handle
 		dataUtil.write(data);
-		return data[playerName];
+		return data[userID];
 	}
 	
-	function verifyPlayerName(playerName){
-		if(data[playerName] === undefined)
+	function verifyUserID(userID){
+		if(data[userID] === undefined)
 			return false;
 		
 		return true;
@@ -80,10 +80,10 @@ var instance = (function() {
 	}
 	
   return { // public interface
-    getPlayerPt: getPlayerPt,
-	setPlayerPt: setPlayerPt,
-	addPlayerPt: addPlayerPt,
-	deductPlayerPt: deductPlayerPt,
+    getUserPt: getUserPt,
+	setUserPt: setUserPt,
+	addUserPt: addUserPt,
+	deductUserPt: deductUserPt,
     getData: getData
   };
 })();
