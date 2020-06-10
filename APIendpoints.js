@@ -4,7 +4,7 @@ const app = express();
 //const root = 'D:/dev';
 
 //const kudoDescData = require("./KudoDescDataInstance.js");
-const kudoPtData = require("./KudoPtDataInstance.js");
+const kudoMemberData = require("./KudoMemberDataInstance.js");
 // const fileUtilSingleton = require("./FileUtilSingleton.js");
 
 app.get('/api', async (req, res) =>{
@@ -19,49 +19,57 @@ app.post('/api/posts', async (req, res) => {
     });
 });
 
-app.get('/getPlayerToken', async (req, res) => {
-    let playerID = req.query.playerID;
+app.get('/getkudo', async (req, res) => {
+    let UserID = req.query.UserID;
 	res.json({
-		message: kudoDescData.getPlayerToken(playerID)
+		message: kudoMemberData.getUserKudo(UserID)
 	});
 });
 
-app.get('/setPlayerToken', async (req, res) => {
-	let playerID = req.query.playerID;
+app.get('/setkudo', async (req, res) => {
+	let UserID = req.query.UserID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoDescData.setPlayerToken(playerID, amount)
+		message: kudoMemberData.setUserKudo(UserID, amount)
+	});
+});
+
+app.get('/deductkudo', async (req, res) => {
+	let UserID = req.query.UserID;
+	let amount = req.query.amount;
+	res.json({
+		message: kudoMemberData.deductUserKudo(UserID, amount)
 	});
 });
 
 app.get('/getpt', async (req, res) => {
-    let playerID = req.query.playerID;
+    let UserID = req.query.UserID;
 	res.json({
-		message: kudoPtData.getPlayerPt(playerID)
+		message: kudoMemberData.getUserPt(UserID)
 	});
 });
 
 app.get('/setpt', async (req, res) => {
-	let playerID = req.query.playerID;
+	let UserID = req.query.UserID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoPtData.setPlayerPt(playerID, amount)
+		message: kudoMemberData.setUserPt(UserID, amount)
 	});
 });
 
 app.get('/addpt', async (req, res) => {
-	let playerID = req.query.playerID;
+	let UserID = req.query.UserID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoPtData.addPlayerPt(playerID, amount)
+		message: kudoMemberData.addUserPt(UserID, amount)
 	});
 });
 
 app.get('/deductpt', async (req, res) => {
-	let playerID = req.query.playerID;
+	let UserID = req.query.UserID;
 	let amount = req.query.amount;
 	res.json({
-		message: kudoPtData.deductPlayerPt(playerID, amount)
+		message: kudoMemberData.deductUserPt(UserID, amount)
 	});
 });
 

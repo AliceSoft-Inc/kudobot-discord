@@ -1,5 +1,5 @@
 const DataUtil = require("./DataUtil.js");
-const fileName = './database/kudoPt.json';
+const fileName = './database/kudoMember.json';
 const fileEncoding = 'utf8';
 
 var instance = (function() {
@@ -15,7 +15,7 @@ var instance = (function() {
 		if(!verifyUserID(userID))
 			return "error: User " + userID + " does not exist.";
 		
-		return data[userID]; //TODO: exception handle
+		return data[userID].pt; //TODO: exception handle
     }
 	
 	function setUserPt(userID, amount) {
@@ -26,9 +26,9 @@ var instance = (function() {
 		if(!verifyPtAmount(amount))
 			return "error: please enter a valid number for amount.";
 		
-		data[userID] = parseInt(amount); //TODO: exception handle
+		data[userID].pt = parseInt(amount); //TODO: exception handle
 		dataUtil.write(data);
-		return data[userID];
+		return data[userID].pt;
 	}
 	
 	function addUserPt(userID, amount) {
@@ -39,9 +39,9 @@ var instance = (function() {
 		if(!verifyPtAmount(amount))
 			return "error: please enter a valid number for amount.";
 		
-		data[userID] += parseInt(amount); //TODO: exception handle
+		data[userID].pt += parseInt(amount); //TODO: exception handle
 		dataUtil.write(data);
-		return data[userID]
+		return data[userID].pt;
 	}
 	
 	function deductUserPt(userID, amount) {
@@ -54,17 +54,57 @@ var instance = (function() {
 		
 		var amountInt = parseInt(amount);
 		
-		if(data[userID] - amountInt < 0)
+		if(data[userID].pt - amountInt < 0)
 			return "will result in a negative balance, rejected."
 		
-		data[userID] -= amountInt; //TODO: exception handle
+		data[userID].pt -= amountInt; //TODO: exception handle
 		dataUtil.write(data);
-		return data[userID];
+		return data[userID].pt;
+	}
+	
+	function getUserKudo(userID) {
+		data = dataUtil.read();
+		if(!verifyUserID(userID))
+			return "error: User " + userID + " does not exist.";
+		
+		return data[userID].kudo; //TODO: exception handle
+    }
+	
+	function setUserKudo(userID, amount) {
+		data = dataUtil.read();
+		if(!verifyUserID(userID))
+			return "error: User " + userID + " does not exist.";
+		
+		if(!verifyPtAmount(amount))
+			return "error: please enter a valid number for amount.";
+		
+		data[userID].kudo = parseInt(amount); //TODO: exception handle
+		dataUtil.write(data);
+		return data[userID].kudo;
+	}
+	
+	function deductUserKudo(userID) {
+		data = dataUtil.read();
+		if(!verifyUserID(userID))
+			return "error: User " + userID + " does not exist.";
+		
+		if(data[userID].kudo === 0)
+			return "will result in a negative balance, rejected."
+		
+		data[userID].kudo--; //TODO: exception handle
+		dataUtil.write(data);
+		return data[userID].kudo;
 	}
 	
 	function verifyUserID(userID){
 		if(data[userID] === undefined)
 			return false;
+		
+		if(data[userID].pt === undefined)
+			data[userID].pt = 0;
+		
+		if(data[userID].kudo === undefined)
+			data[userID].kudo = 0;
 		
 		return true;
 	}
@@ -84,7 +124,10 @@ var instance = (function() {
 	setUserPt: setUserPt,
 	addUserPt: addUserPt,
 	deductUserPt: deductUserPt,
-    getData: getData
+    getData: getData,
+	getUserKudo: getUserKudo,
+	setUserKudo: setUserKudo,
+	deductUserKudo: deductUserKudo
   };
 })();
 

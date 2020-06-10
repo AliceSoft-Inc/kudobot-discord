@@ -2,7 +2,7 @@ const discord = require("discord.js");		//npm install discord.js
 const botconfig = require("./botconfig.json");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
-const kudoPtData = require("./KudoPtDataInstance.js"); //kudo pt
+const kudoPtData = require("./KudoMemberDataInstance.js"); //kudo pt
 
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
 // const guildID_baixue = '493946649014566943';
