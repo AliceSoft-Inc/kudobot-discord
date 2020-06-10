@@ -178,19 +178,20 @@ function handleKudoPtReturn(inputMessage, authorID) {
 		// TODO: next 3 cases need kudoAdmin methods.
 		
 		case "add":
+			if (kudoAdminData.isAdmin(authorID))
+				return kudoPtData.addUserPt(target_id, inputMessage[3]);
+				
 			if(!inputMessage[3])
 				return "error: please enter desired Pt number.";
-
-			if (kudoAdminData.isAdmin(authorID)) 
-				return kudoPtData.addUserPt(target_id, inputMessage[3]);
 				 
 			return "Permission Denied: Please contact admin.";
 
 		case "set":
-			if(!inputMessage[3])
-				return "error: please enter desired Pt number.";
 			if (kudoAdminData.isAdmin(authorID)) 
 				return kudoPtData.setUserPt(target_id, inputMessage[3]);
+
+			if (!inputMessage[3])
+				return "error: please enter desired Pt number.";
 				 
 			return "Permission Denied: Please contact admin.";
 
