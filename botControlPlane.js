@@ -2,7 +2,7 @@ const discord = require("discord.js");		//npm install discord.js
 const botconfig = require("./botconfig.json");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
-const kudoPtData = require("./KudoMemberDataInstance.js"); //kudo pt
+const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo pt
 
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
 // const guildID_baixue = '493946649014566943';
@@ -20,14 +20,29 @@ client.on("ready", async() => {
 	// console.log(client.guilds.cache.get(guildID_test).roles.cache);
 	// console.log(client.guilds.cache.get(guildID_test).members.cache);
 
-	// Populate admin list here.
 	if (debugMode) console.log("\nCurrent guild role list:");
 	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
-		if (debugMode) console.log("	Role ID: " + role.id + ", Role: " + role.name);
+		if (debugMode) console.log("Role ID: " + role.id + ", Role: " + role.name);
 
-		// TODO: revised role name here. Need further kudoAdminData support.
+		// Initiate members kudo & info here. To specify further, revise logic here.
+
+		if (role.name === "@everyone") {
+			if (debugMode) console.log(`	Initiate members info: \n`);
+			role.members.forEach(member => {
+				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
+				try {
+					kudoMemberData.createUser(member.user.id, member.user.username);
+				} catch (err) {
+					console.log(err);
+				}
+
+			});
+		}
+
+		// Populate admin list here.
+		// TODO: revised role name here. 
 		if (role.name === "testRole1") {
-			if (debugMode) console.log(`\nAdmin under ${role.name} :`);
+			if (debugMode) console.log(`	Admin under ${role.name} :`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
 				kudoAdminData.assignAdmin(member.user.id); member.user.id
@@ -83,13 +98,22 @@ client.on("message", async message => {
 		case `${prefix}kudoAdmin`:
 			if (kudoAdminData.isAdmin(message.author.id))
 				return message.channel.send(handleKudoAdminReturn(messageArray, message.author.id));
-			else return "Permission Denied: Please contact admin.";
+			else return message.channel.send("Permission Denied: Please contact admin.");
 		
 		case `${prefix}thumbupTest`:
 			return message.react('👍');	
 		
 		case `${prefix}kudos`:
 			return message.channel.send(handleEndorseReturn(messageArray, message.author.id));
+
+		case `${prefix}displayInfo`:
+			if (kudoAdminData.isAdmin(message.author.id)) 
+				if (messageArray[1] === "all") {
+					// TODO: print more formatted list
+					return message.author.send(JSON.stringify(kudoMemberData.getData()));
+				}
+				else return message.channel.send("Not a valid command, do you mean: \n/displayInfo all");
+			else return message.channel.send("Permission Denied: Please contact admin.");
 
 		case `${prefix}help`:
 			// Check premission
@@ -107,6 +131,7 @@ Current Available:
 	--reset <@User>
 /thumbupTest
 /kudos <@User> <Description>
+/displayInfo <all>
 				`);
 			else return message.channel.send(
 				`
@@ -159,9 +184,9 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if (target_id === authorID) return "Sorry, you cannot endorse yourself.";
 	
 	// TODO: next case need kudoDesc methods.
-	// return kudoPtData.addUserPt(target_id, 1) + kudoDescData.addDesc(target_id, inputMessage[2]);
+	// return kudoMemberData.addUserPt(target_id, 1) + kudoDescData.addDesc(target_id, inputMessage[2]);
 
-	return kudoPtData.addUserPt(target_id, 1);
+	return kudoMemberData.addUserPt(target_id, 1);
 
 }
 
@@ -173,13 +198,13 @@ function handleKudoPtReturn(inputMessage, authorID) {
 
 	switch (inputMessage[1]) {
 		case "get":
-			return kudoPtData.getUserPt(target_id);
+			return kudoMemberData.getUserPt(target_id);
 
 		// TODO: next 3 cases need kudoAdmin methods.
 		
 		case "add":
 			if (kudoAdminData.isAdmin(authorID))
-				return kudoPtData.addUserPt(target_id, inputMessage[3]);
+				return kudoMemberData.addUserPt(target_id, inputMessage[3]);
 				
 			if(!inputMessage[3])
 				return "error: please enter desired Pt number.";
@@ -188,7 +213,7 @@ function handleKudoPtReturn(inputMessage, authorID) {
 
 		case "set":
 			if (kudoAdminData.isAdmin(authorID)) 
-				return kudoPtData.setUserPt(target_id, inputMessage[3]);
+				return kudoMemberData.setUserPt(target_id, inputMessage[3]);
 
 			if (!inputMessage[3])
 				return "error: please enter desired Pt number.";
@@ -199,7 +224,7 @@ function handleKudoPtReturn(inputMessage, authorID) {
 			//console.log(kudoAdminData.getData());
 			console.log(kudoAdminData.isAdmin(authorID));
 			if (kudoAdminData.isAdmin(authorID)) 
-				return kudoPtData.setUserPt(target_id, 0);  // TODO: return a notification instead of fixed 0 number
+				return kudoMemberData.setUserPt(target_id, 0);  // TODO: return a notification instead of fixed 0 number
 
 			return "Permission Denied: Please contact admin.";
 

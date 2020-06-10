@@ -1,6 +1,9 @@
 const DataUtil = require("./DataUtil.js");
 const fileName = './database/kudoMember.json';
 const fileEncoding = 'utf8';
+const error = require('./kudoErrors');
+
+const kudo_init = 10;
 
 var instance = (function() {
   let dataUtil = new DataUtil(fileName, fileEncoding);
@@ -8,6 +11,21 @@ var instance = (function() {
   
 	function getData() { //test use
 		return data;
+	}
+
+	function createUser(userID,userName) {
+		data = dataUtil.read();
+		if (verifyUserID(userID))
+			return console.log(`		Warning: User ${userID} already exists.`);
+
+		data[userID] = {
+			userName: userName,
+			kudo: kudo_init,
+			pt: 0
+		};
+		dataUtil.write(data);
+
+		return `Successfully created user ${userID}: ${userName}.`;
 	}
 	
 	function getUserPt(userID) {
@@ -127,7 +145,8 @@ var instance = (function() {
     getData: getData,
 	getUserKudo: getUserKudo,
 	setUserKudo: setUserKudo,
-	deductUserKudo: deductUserKudo
+	deductUserKudo: deductUserKudo,
+	createUser: createUser
   };
 })();
 
