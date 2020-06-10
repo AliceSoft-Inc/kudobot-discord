@@ -11,7 +11,7 @@ class DataUtil {
 	}
   
 	write(data){
-		fs.writeFile(this.fileName, JSON.stringify(data), function (err) {
+		fs.writeFileSync(this.fileName, JSON.stringify(data), function (err) {
 			if (err) 
 				return console.log(err);
 		});
