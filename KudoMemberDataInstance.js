@@ -73,7 +73,7 @@ var instance = (function() {
 		var amountInt = parseInt(amount);
 		
 		if(data[userID].pt - amountInt < 0)
-			return "will result in a negative balance, rejected."
+			return "error: will result in a negative balance, rejected."
 		
 		data[userID].pt -= amountInt; //TODO: exception handle
 		dataUtil.write(data);
@@ -97,6 +97,7 @@ var instance = (function() {
 			return "error: please enter a valid number for amount.";
 		
 		data[userID].kudo = parseInt(amount); //TODO: exception handle
+			
 		dataUtil.write(data);
 		return data[userID].kudo;
 	}
@@ -112,6 +113,16 @@ var instance = (function() {
 		data[userID].kudo--; //TODO: exception handle
 		dataUtil.write(data);
 		return data[userID].kudo;
+	}
+	
+	function getUserMap(){
+		data = dataUtil.read();
+		var myMap = {};
+		for(var key in data){
+			//console.log(data[key].userName);
+			myMap[key] = data[key].userName;
+		}
+		return myMap;
 	}
 	
 	function verifyUserID(userID){
@@ -146,7 +157,8 @@ var instance = (function() {
 	getUserKudo: getUserKudo,
 	setUserKudo: setUserKudo,
 	deductUserKudo: deductUserKudo,
-	createUser: createUser
+	createUser: createUser,
+	getUserMap: getUserMap
   };
 })();
 

@@ -73,6 +73,12 @@ app.get('/deductpt', async (req, res) => {
 	});
 });
 
+app.get('/getUserMap', async (req, res) => {
+	res.json({
+		message: kudoMemberData.getUserMap()
+	});
+});
+
 /*app.get('/sftsfa', (req, res) => {
    res.sendFile('./sftsfa/sftsfa.github.io/index.html', {root}); 
 });*/ // local test only
