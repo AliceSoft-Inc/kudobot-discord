@@ -4,12 +4,16 @@ const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
 const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo pt
 
+const prizeData = require('./database/KudoPrize.json'); 
+
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
 // const guildID_baixue = '493946649014566943';
 
 const client = new discord.Client({disableEveryone: true});
 
 const debugMode = true;  // Debug flag
+
+var userMap;
 
 client.on("ready", async() => {
 	client.user.setActivity("劫，剑姬，刀妹");
@@ -48,7 +52,6 @@ client.on("ready", async() => {
 				kudoAdminData.assignAdmin(member.user.id); member.user.id
 			});
 		}
-			
 	});
 	
 	// TODO: transfer guild data to kudoAdmin?
@@ -56,6 +59,8 @@ client.on("ready", async() => {
 	// kudoAdminData.setGuildID(client.guilds.cache.keys().next().value); // id => kudoAdminData
 	// kudoAdminData.setGuildData(client.guilds.cache.get(guildID));  // guild => kudoAdminData 
 	
+	// Initialize userMap
+	userMap = kudoMemberData.getUserMap();
 
 });
 
@@ -106,10 +111,16 @@ client.on("message", async message => {
 		case `${prefix}kudos`:
 			return message.channel.send(handleEndorseReturn(messageArray, message.author.id));
 
+		case `${prefix}prize`:
+			return message.channel.send(handlePrizeReturn(messageArray, message.author.id));
+
+		case `${prefix}kudoDesc`:
+			return message.channel.send(handleKudoDescReturn(messageArray, message.author.id));
+
 		case `${prefix}displayInfo`:
 			if (kudoAdminData.isAdmin(message.author.id)) 
 				if (messageArray[1] === "all") {
-					// TODO: print more formatted list
+					// TODO: print more formatted list and replace getData method.
 					return message.author.send(JSON.stringify(kudoMemberData.getData()));
 				}
 				else return message.channel.send("Not a valid command, do you mean: \n/displayInfo all");
@@ -131,7 +142,14 @@ Current Available:
 	--reset <@User>
 /thumbupTest
 /kudos <@User> <Description>
+/kudoDesc
+	--checkRev <mine/@User>
+	--checkSend <mine/@User>
+	--check
 /displayInfo <all>
+/prize
+	--checklist
+	--claim <PrizeEnum>
 				`);
 			else return message.channel.send(
 				`
@@ -140,15 +158,43 @@ Current Available:
 	--get <@User> 
 /thumbupTest
 /kudos <@User> <Description>
+/kudoDesc
+	--check
+/prize
+	--checklist
+	--claim <PrizeEnum>
 				`);
-		
 		default:
 			return message.channel.send("Undefined action. Try /help for more available options.");
 	}
 });
 
-function handleKudoDescReturn(inputMessage){
+function handleKudoDescReturn(inputMessage, authorID){
 
+	// TODO: debug
+	return "只今工事中"
+
+	if (!inputMessage[1])
+		return "error: please enter valild arguments";
+
+	switch (inputMessage[1]) {
+		case "check":
+			return kudoDescData.checkRev(authorID, userMap) + '\n' + kudoDescData.checkSend(authorID, userMap);
+
+		case "checkRev":
+			if (!inputMessage[2])
+				return "error: please enter valild arguments";
+			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap);
+
+		case "checkSend":
+			if (!inputMessage[2])
+				return "error: please enter valild arguments";
+			return kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
+
+		default:
+			return "Not a valid command, do you mean: \n/kudoAdmin assignAdmin <@User>\n" +
+				"/kudoAdmin rmAdmin <@User>\n";
+	}
 }
 
 function handleKudoAdminReturn(inputMessage, authorID) {
@@ -157,20 +203,19 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	if (!inputMessage[1] || !inputMessage[2])
 		return "error: please enter valild arguments";
 
-	var target_id = inputMessage[2].slice(2, -1);
+	var targetID = inputMessage[2].slice(2, -1);
 
 	switch (inputMessage[1]) {
 		case "assignAdmin":
-			return kudoAdminData.assignAdmin(target_id);
+			return kudoAdminData.assignAdmin(targetID);
 
 		case "rmAdmin":
-			return kudoAdminData.rmAdmin(target_id);
+			return kudoAdminData.rmAdmin(targetID);
 
 		default:
 			return "Not a valid command, do you mean: \n/kudoAdmin assignAdmin <@User>\n" +
 				"/kudoAdmin rmAdmin <@User>\n";
 	}
-
 }
 
 function handleEndorseReturn(inputMessage, authorID) {
@@ -180,31 +225,55 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if(!inputMessage[1] || !inputMessage[2])
 	return "error: please enter valild arguments";
 
-	var target_id = inputMessage[1].slice(2, -1);
-	if (target_id === authorID) return "Sorry, you cannot endorse yourself.";
+	var targetID = inputMessage[1].slice(2, -1);
+	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
 	
 	// TODO: next case need kudoDesc methods.
-	// return kudoMemberData.addUserPt(target_id, 1) + kudoDescData.addDesc(target_id, inputMessage[2]);
+	return kudoMemberData.addUserPt(targetID, 1) + kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
+}
 
-	return kudoMemberData.addUserPt(target_id, 1);
+function handlePrizeReturn(inputMessage, authorID) {
+	// Important: primary key for user database is currently based on user id.
+	if (debugMode) console.log(inputMessage);
 
+	if (!inputMessage[1])
+		return "error: please enter valild arguments";
+
+	switch (inputMessage[1]) {
+		case "checklist":
+			// TODO: show formatted string
+			return JSON.stringify(prizeData);
+	
+		case "claim":
+			if (!inputMessage[2])
+				return "error: please enter valild arguments";
+			else if(!prizeData[inputMessage[2]])
+				return `error: Item not in prize list. Please recheck.`;
+			else {
+				let ret = kudoMemberData.deductUserPt(authorID, prizeData[inputMessage[2]].value);
+				if (typeof(ret) === "string") return ret;
+				return `Claim msg prize "${prizeData[inputMessage[2]].name}" has been sent to admin. Remaining Pts: ${ret}.`;
+			}
+
+		default:
+			return `Not a valid command, do you mean: \n/prize checklist\n/prize claim <PrizeEnum>`;
+	}
 }
 
 function handleKudoPtReturn(inputMessage, authorID) {
 	if (!inputMessage[2])
 		return "error: please enter a valid user name";
 
-	var target_id = inputMessage[2].slice(2, -1);
+	var targetID = inputMessage[2].slice(2, -1);
+	//console.log(targetID);
 
 	switch (inputMessage[1]) {
 		case "get":
-			return kudoMemberData.getUserPt(target_id);
-
-		// TODO: next 3 cases need kudoAdmin methods.
+			return kudoMemberData.getUserPt(targetID);
 		
 		case "add":
 			if (kudoAdminData.isAdmin(authorID))
-				return kudoMemberData.addUserPt(target_id, inputMessage[3]);
+				return kudoMemberData.addUserPt(targetID, inputMessage[3]);
 				
 			if(!inputMessage[3])
 				return "error: please enter desired Pt number.";
@@ -213,7 +282,7 @@ function handleKudoPtReturn(inputMessage, authorID) {
 
 		case "set":
 			if (kudoAdminData.isAdmin(authorID)) 
-				return kudoMemberData.setUserPt(target_id, inputMessage[3]);
+				return kudoMemberData.setUserPt(targetID, inputMessage[3]);
 
 			if (!inputMessage[3])
 				return "error: please enter desired Pt number.";
@@ -224,10 +293,9 @@ function handleKudoPtReturn(inputMessage, authorID) {
 			//console.log(kudoAdminData.getData());
 			console.log(kudoAdminData.isAdmin(authorID));
 			if (kudoAdminData.isAdmin(authorID)) 
-				return kudoMemberData.setUserPt(target_id, 0);  // TODO: return a notification instead of fixed 0 number
+				return kudoMemberData.setUserPt(targetID, 0);  // TODO: return a notification instead of fixed 0 number
 
 			return "Permission Denied: Please contact admin.";
-
 	
 		default:
 			if (kudoAdminData.isAdmin(authorID))
