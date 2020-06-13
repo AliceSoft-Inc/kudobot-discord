@@ -2,21 +2,21 @@ const discord = require("discord.js");		//npm install discord.js
 const botconfig = require("./botconfig.json");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
-const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo pt
+const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo member
 
 const prizeData = require('./database/KudoPrize.json'); 
 
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
-// const guildID_baixue = '493946649014566943';
 
 const client = new discord.Client({disableEveryone: true});
 
 const debugMode = true;  // Debug flag
 
 var userMap;
+var adminDMmap = {};
 
 client.on("ready", async() => {
-	client.user.setActivity("劫，剑姬，刀妹");
+	// client.user.setActivity(" ");
 	// console.log(client.guilds);
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
 	
@@ -49,7 +49,12 @@ client.on("ready", async() => {
 			if (debugMode) console.log(`	Admin under ${role.name} :`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
-				kudoAdminData.assignAdmin(member.user.id); member.user.id
+				kudoAdminData.assignAdmin(member.user.id); 
+				console.log("member.user: ");
+				console.log(member.user);
+				adminDMmap[member.user.id] = member;
+				console.log("adminDMmap: ");
+				console.log(adminDMmap);
 			});
 		}
 	});
@@ -172,7 +177,6 @@ Current Available:
 function handleKudoDescReturn(inputMessage, authorID){
 
 	// TODO: debug
-
 	if (!inputMessage[1])
 		return "error: please enter valild arguments";
 
@@ -227,8 +231,8 @@ function handleEndorseReturn(inputMessage, authorID) {
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
 	
-	// TODO: next case need kudoDesc methods.
-	return kudoMemberData.addUserPt(targetID, 1) + kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
+	// TODO: Error handling
+	return kudoMemberData.addUserPt(targetID, 1) + " " + kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
 }
 
 function handlePrizeReturn(inputMessage, authorID) {
@@ -251,6 +255,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 			else {
 				let ret = kudoMemberData.deductUserPt(authorID, prizeData[inputMessage[2]].value);
 				if (typeof(ret) === "string") return ret;
+				// adminDMmap.next().send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claim prize: "${prizeData[inputMessage[2]].name}"`);
 				return `Claim msg prize "${prizeData[inputMessage[2]].name}" has been sent to admin. Remaining Pts: ${ret}.`;
 			}
 
