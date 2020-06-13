@@ -178,6 +178,8 @@ function handleKudoDescReturn(inputMessage, authorID){
 
 	switch (inputMessage[1]) {
 		case "check":
+			if (!inputMessage[2])
+				return "error: please enter valild arguments";
 			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap) + '\n' + kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkRev":
