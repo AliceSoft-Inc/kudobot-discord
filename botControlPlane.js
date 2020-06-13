@@ -172,14 +172,13 @@ Current Available:
 function handleKudoDescReturn(inputMessage, authorID){
 
 	// TODO: debug
-	return "只今工事中"
 
 	if (!inputMessage[1])
 		return "error: please enter valild arguments";
 
 	switch (inputMessage[1]) {
 		case "check":
-			return kudoDescData.checkRev(authorID, userMap) + '\n' + kudoDescData.checkSend(authorID, userMap);
+			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap) + '\n' + kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkRev":
 			if (!inputMessage[2])
