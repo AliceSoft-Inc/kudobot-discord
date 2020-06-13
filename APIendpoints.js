@@ -3,7 +3,7 @@ const express = require('express');			//npm install express
 const app = express();
 //const root = 'D:/dev';
 
-//const kudoDescData = require("./KudoDescDataInstance.js");
+const kudoDescData = require("./KudoDescDataInstance.js");
 const kudoMemberData = require("./KudoMemberDataInstance.js");
 // const fileUtilSingleton = require("./FileUtilSingleton.js");
 
@@ -79,8 +79,29 @@ app.get('/getUserMap', async (req, res) => {
 	});
 });
 
-/*app.get('/sftsfa', (req, res) => {
-   res.sendFile('./sftsfa/sftsfa.github.io/index.html', {root}); 
-});*/ // local test only
+app.get('/tryAddDesc', async (req, res) => {
+	let sender = req.query.sender;
+	let receiver = req.query.receiver;
+	let desc = req.query.desc;
+	res.json({
+		message: kudoDescData.addDesc(sender, receiver, desc)
+	});
+});
+
+app.get('/tryCheckRev', async (req, res) => {
+	let UserID = req.query.UserID;
+	let myMap = kudoMemberData.getUserMap();
+	res.json({
+		message: kudoDescData.checkRev(UserID, myMap)
+	});
+});
+
+app.get('/tryCheckSend', async (req, res) => {
+	let UserID = req.query.UserID;
+	let myMap = kudoMemberData.getUserMap();
+	res.json({
+		message: kudoDescData.checkSend(UserID, myMap)
+	});
+});
 
 app.listen(5180, () => console.log('Node testing server instance started on port 5180'));

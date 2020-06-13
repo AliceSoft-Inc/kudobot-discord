@@ -9,32 +9,49 @@ var instance = (function() {
 	function getData() { //test use
 		return data;
 	}
-	
-	function getUserToken(userID) {
+		
+	function addDesc(sender, receiver, desc){
 		data = dataUtil.read();
-		if(!data[userID])
-			return "error: user " + userID + " does not exist.";
-		
-		return data[userID]; //TODO: exception handle
-    }
-	
-	function setUserToken(userID, amount) {
-		data = dataUtil.read();
-		if(!data[userID])
-			return "error: user " + userID + " does not exist.";
-		
-		if(isNaN(amount))
-			return "error: please enter a valid number for amount.";
-		
-		data[userID] = parseInt(amount); //TODO: exception handle
+		var newDesc = {};
+		newDesc.sender = sender;
+		newDesc.receiver = receiver;
+		newDesc.desc = desc;
+		data.push(newDesc);		
 		dataUtil.write(data);
-		return amount;
+		return "Successful";
+	}
+	
+	function checkRev(receiver, myMap){
+		data = dataUtil.read();
+		var result = `Here are to tokens received by ${myMap[receiver]}:\n`; var count = 0;
+		data
+		.filter((x) => {return x.receiver === receiver;})
+		.map((x) => {
+			count++;
+			result += `Received from: ${myMap[x.sender]}, Description: ${x.desc}\n`;
+		});
+		result += `Total: ${count}`
+			return result;
+	}
+	
+	function checkSend(sender, myMap){
+		data = dataUtil.read();
+		var result = `Here are to tokens received by ${myMap[sender]}:\n`; var count = 0;
+		data
+		.filter((x) => {return x.sender === sender;})
+		.map((x) => {
+			count++;
+			result += `Sent to: ${myMap[x.receiver]}, Description: ${x.desc}\n`;
+		});
+		result += `Total: ${count}`
+			return result;
 	}
 	
   return { // public interface
-    getUserToken: getUserToken,
-	setUserToken: setUserToken,
-    getData: getData
+    getData: getData,
+	addDesc: addDesc,
+	checkRev: checkRev,
+	checkSend: checkSend
   };
 })();
 
