@@ -108,7 +108,7 @@ client.on("message", async message => {
 		case `${prefix}refresh`:
 			if(!messageArray[1]) 
 				return message.channel.send(`error: please enter valid arguments`);
-			else if (!messageArray[1].slice(0, 2) === "<@")
+			else if (messageArray[1].slice(0, 2) !== "<@")
 				return "error: please enter a valid username";
 			
 			var targetID = messageArray[1].slice(2, -1);
@@ -229,7 +229,7 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	if (!inputMessage[1] || !inputMessage[2])
 		return "error: please enter valid arguments";
 
-	if (!inputMessage[2].slice(0, 2) === "<@")
+	if (inputMessage[2].slice(0, 2) !== "<@")
 		return "error: please enter a valid username";
 
 	var targetID = inputMessage[2].slice(2, -1);
@@ -257,7 +257,9 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if(!inputMessage[1] || !inputMessage[2])
 	return "error: please enter valid arguments";
 
-	if (!inputMessage[1].slice(0, 2) === "<@")
+	console.log(inputMessage[1].slice(0, 2));
+	
+	if (inputMessage[1].slice(0, 2) !== "<@")
 		return "error: please enter a valid username";
 
 	var targetID = inputMessage[1].slice(2, -1);
