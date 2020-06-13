@@ -3,6 +3,7 @@
 const DataUtil = require("./DataUtil.js");
 const fileName = './database/kudoAdmin.json';
 const fileEncoding = 'utf8';
+const msg = require("./resource/botReturnMessageResource.js");
 
 var instance = (function() {
 	let dataUtil = new DataUtil(fileName, fileEncoding);
@@ -14,24 +15,24 @@ var instance = (function() {
 	
 	function assignAdmin(userID) { 
 		if (verifyuserID(userID))
-			return "error: Admin " + userID + " already existed.";
+			return msg.adminExistMsg(userID);
 
 		data[userID] = true;
 		dataUtil.write(data);
-		return `Successfully assigned userID: ${userID} as admin.`; //TODO: exception handle
+		return msg.adminAsignSuccessMsg(userID); //TODO: exception handle
 	}
 
 	function isAdmin(userID) { 
-		return verifyuserID(userID); //TODO: exception handle
+		return msg.verifyuserID(userID); //TODO: exception handle
 	}
 
 	function rmAdmin(userID) {
 		if (!verifyuserID(userID))
-			return "error: User" + userID + " is not under admin premission.";
+			return msg.useNotAdminMsg(userID);
 
 		data[userID] = false;
 		dataUtil.write(data);
-		return `Successfully removed userID: ${userID} from admin.`; //TODO: exception handle
+		return msg.adminRemovalSuccessMsg(userID); //TODO: exception handle
 	}
 
 	function verifyuserID(userID) {
