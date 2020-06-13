@@ -2,10 +2,11 @@ const DataUtil = require("./DataUtil.js");
 const fileName = './database/kudoDesc.json';
 const fileEncoding = 'utf8';
 const msg = require("./resource/botReturnMessageResource.js");
+const defaultVal = [];
 
 var instance = (function() {
   let dataUtil = new DataUtil(fileName, fileEncoding);
-  var data = dataUtil.read();
+  var data = dataUtil.readOrInit(defaultVal);
   
 	function getData() { //test use
 		return data;

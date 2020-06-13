@@ -5,7 +5,7 @@ const app = express();
 
 const kudoDescData = require("./KudoDescDataInstance.js");
 const kudoMemberData = require("./KudoMemberDataInstance.js");
-// const fileUtilSingleton = require("./FileUtilSingleton.js");
+const kudoAdminData = require("./KudoAdminDataInstance.js");
 
 app.get('/api', async (req, res) =>{
     res.json({

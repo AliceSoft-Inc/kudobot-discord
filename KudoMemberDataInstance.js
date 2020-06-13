@@ -3,13 +3,14 @@ const fileName = './database/kudoMember.json';
 const fileEncoding = 'utf8';
 const error = require('./kudoErrors');
 const msg = require("./resource/botReturnMessageResource.js");
+const defaultVal = {};
 
 const kudo_init = 10;
 
 
 var instance = (function() {
   let dataUtil = new DataUtil(fileName, fileEncoding);
-  var data = dataUtil.read();
+  var data = dataUtil.readOrInit(defaultVal);
   
 	function getData() { //test use
 		return data;
