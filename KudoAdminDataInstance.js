@@ -41,7 +41,6 @@ var instance = (function() {
 		return true;
 	}
 	
-	
   return { // public interface
 	getData: getData,
 	assignAdmin: assignAdmin,
