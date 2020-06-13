@@ -28,7 +28,7 @@ var instance = (function() {
 
 	function rmAdmin(userID) {
 		if (!verifyuserID(userID))
-			return msg.useNotAdminMsg(userID);
+			return msg.userNotAdminMsg(userID);
 
 		data[userID] = false;
 		dataUtil.write(data);

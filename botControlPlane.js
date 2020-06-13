@@ -143,10 +143,11 @@ Current Available:
 	--reset <@User>
 /thumbupTest
 /kudos <@User> <Description>
+/kudos num
 /kudoDesc
 	--checkRev <mine/@User>
 	--checkSend <mine/@User>
-	--check
+	--check <@User>
 /displayInfo <all>
 /prize
 	--checklist
@@ -159,8 +160,9 @@ Current Available:
 	--get <@User> 
 /thumbupTest
 /kudos <@User> <Description>
+/kudos num
 /kudoDesc
-	--check
+	--check <@User>
 /prize
 	--checklist
 	--claim <PrizeEnum>
@@ -174,22 +176,22 @@ function handleKudoDescReturn(inputMessage, authorID){
 
 	// TODO: debug
 	if (!inputMessage[1])
-		return "error: please enter valild arguments";
+		return "error: please enter valid arguments";
 
 	switch (inputMessage[1]) {
 		case "check":
 			if (!inputMessage[2])
-				return "error: please enter valild arguments";
+				return "error: please enter valid arguments";
 			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap) + '\n' + kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkRev":
 			if (!inputMessage[2])
-				return "error: please enter valild arguments";
+				return "error: please enter valid arguments";
 			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkSend":
 			if (!inputMessage[2])
-				return "error: please enter valild arguments";
+				return "error: please enter valid arguments";
 			return kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		default:
@@ -202,7 +204,10 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	if (debugMode) console.log("\n\033[1;34mAdmin Command: \033[0m" + inputMessage[1] + " by user " + authorID+".");
 	
 	if (!inputMessage[1] || !inputMessage[2])
-		return "error: please enter valild arguments";
+		return "error: please enter valid arguments";
+
+	if (!inputMessage[2].slice(0, 2) === "<@")
+		return "error: please enter a valid username";
 
 	var targetID = inputMessage[2].slice(2, -1);
 
@@ -223,15 +228,24 @@ function handleEndorseReturn(inputMessage, authorID) {
 	// Important: primary key for user database is currently based on user id.
 	if (debugMode) console.log(inputMessage);
 
+	// TODO: urgly code
+	if (inputMessage[1] === "num") return kudoMemberData.getUserKudo(authorID);
+
 	if(!inputMessage[1] || !inputMessage[2])
-	return "error: please enter valild arguments";
+	return "error: please enter valid arguments";
+
+	if (!inputMessage[1].slice(0, 2) === "<@")
+		return "error: please enter a valid username";
 
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
 	
 	// TODO: Error handling
-	let ret = kudoMemberData.addUserPt(targetID, 1);
-	if (typeof (ret) === "string") return ret;
+	let ret1 = kudoMemberData.addUserPt(targetID, 1);
+	if (typeof (ret1) === "string") return ret1;
+
+	let ret2 = kudoMemberData.deductUserKudo(authorID);
+	if (typeof (ret2) === "string") return ret2;
 
 	return targetID + " " + kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
 }
@@ -240,7 +254,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 	// Important: primary key for user database is currently based on user id.
 
 	if (!inputMessage[1])
-		return "error: please enter valild arguments";
+		return "error: please enter valid arguments";
 
 	switch (inputMessage[1]) {
 		case "checklist":
@@ -249,7 +263,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 	
 		case "claim":
 			if (!inputMessage[2])
-				return "error: please enter valild arguments";
+				return "error: please enter valid arguments";
 			else if(!prizeData[inputMessage[2]])
 				return `error: Item not in prize list. Please recheck.`;
 			else {
@@ -266,7 +280,10 @@ function handlePrizeReturn(inputMessage, authorID) {
 
 function handleKudoPtReturn(inputMessage, authorID) {
 	if (!inputMessage[2])
-		return "error: please enter a valid user name";
+		return "error: please enter valid arguments";
+
+	if (!inputMessage[2].slice(0,2) === "<@")
+		return "error: please enter a valid username";
 
 	var targetID = inputMessage[2].slice(2, -1);
 	//console.log(targetID);
