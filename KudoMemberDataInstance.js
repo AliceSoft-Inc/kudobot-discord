@@ -2,8 +2,10 @@ const DataUtil = require("./DataUtil.js");
 const fileName = './database/kudoMember.json';
 const fileEncoding = 'utf8';
 const error = require('./kudoErrors');
+const msg = require("./resource/botReturnMessageResource.js");
 
 const kudo_init = 10;
+
 
 var instance = (function() {
   let dataUtil = new DataUtil(fileName, fileEncoding);
@@ -16,7 +18,7 @@ var instance = (function() {
 	function createUser(userID,userName) {
 		data = dataUtil.read();
 		if (verifyUserID(userID))
-			return console.log(`		Warning: User ${userID} already exists.`);
+			return console.log(msg.userNotAdminMsg(userID));
 
 		data[userID] = {
 			userName: userName,
@@ -25,13 +27,13 @@ var instance = (function() {
 		};
 		dataUtil.write(data);
 
-		return `Successfully created user ${userID}: ${userName}.`;
+		return msg.userCreationSuccessMsg(userID, userName);
 	}
 	
 	function getUserPt(userID) {
 		data = dataUtil.read();
 		if(!verifyUserID(userID))
-			return "error: User " + userID + " does not exist.";
+			return msg.userNotExistMsg(userID);
 		
 		return data[userID].pt; //TODO: exception handle
     }
@@ -39,10 +41,10 @@ var instance = (function() {
 	function setUserPt(userID, amount) {
 		data = dataUtil.read();
 		if(!verifyUserID(userID))
-			return "error: User " + userID + " does not exist.";
+			return msg.userNotExistMsg(userID);
 		
 		if(!verifyPtAmount(amount))
-			return "error: please enter a valid number for amount.";
+			return msg.invalidAmountMsg;
 		
 		data[userID].pt = parseInt(amount); //TODO: exception handle
 		dataUtil.write(data);
@@ -52,10 +54,10 @@ var instance = (function() {
 	function addUserPt(userID, amount) {
 		data = dataUtil.read();
 		if(!verifyUserID(userID))
-			return "error: User " + userID + " does not exist.";
+			return msg.userNotExistMsg(userID);
 		
 		if(!verifyPtAmount(amount))
-			return "error: please enter a valid number for amount.";
+			return msg.invalidAmountMsg;
 		
 		data[userID].pt += parseInt(amount); //TODO: exception handle
 		dataUtil.write(data);
@@ -65,15 +67,15 @@ var instance = (function() {
 	function deductUserPt(userID, amount) {
 		data = dataUtil.read();
 		if(!verifyUserID(userID))
-			return "error: User " + userID + " does not exist.";
+			return msg.userNotExistMsg(userID);
 		
 		if(!verifyPtAmount(amount))
-			return "error: please enter a valid number for amount.";
+			return msg.invalidAmountMsg;
 		
 		var amountInt = parseInt(amount);
 		
 		if(data[userID].pt - amountInt < 0)
-			return "error: will result in a negative balance, rejected."
+			return msg.negativeBalanceMsg;
 		
 		data[userID].pt -= amountInt; //TODO: exception handle
 		dataUtil.write(data);
@@ -83,7 +85,7 @@ var instance = (function() {
 	function getUserKudo(userID) {
 		data = dataUtil.read();
 		if(!verifyUserID(userID))
-			return "error: User " + userID + " does not exist.";
+			return msg.userNotExistMsg(userID);
 		
 		return data[userID].kudo; //TODO: exception handle
     }
@@ -91,10 +93,10 @@ var instance = (function() {
 	function setUserKudo(userID, amount) {
 		data = dataUtil.read();
 		if(!verifyUserID(userID))
-			return "error: User " + userID + " does not exist.";
+			return msg.userNotExistMsg(userID);
 		
 		if(!verifyPtAmount(amount))
-			return "error: please enter a valid number for amount.";
+			return msg.invalidAmountMsg;
 		
 		data[userID].kudo = parseInt(amount); //TODO: exception handle
 			
@@ -105,10 +107,10 @@ var instance = (function() {
 	function deductUserKudo(userID) {
 		data = dataUtil.read();
 		if(!verifyUserID(userID))
-			return "error: User " + userID + " does not exist.";
+			return msg.userNotExistMsg(userID);
 		
 		if(data[userID].kudo === 0)
-			return "will result in a negative balance, rejected."
+			return msg.negativeBalanceMsg;
 		
 		data[userID].kudo--; //TODO: exception handle
 		dataUtil.write(data);
@@ -119,7 +121,6 @@ var instance = (function() {
 		data = dataUtil.read();
 		var myMap = {};
 		for(var key in data){
-			//console.log(data[key].userName);
 			myMap[key] = data[key].userName;
 		}
 		return myMap;
