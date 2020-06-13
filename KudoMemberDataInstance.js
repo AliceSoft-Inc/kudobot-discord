@@ -18,13 +18,30 @@ var instance = (function() {
 	function createUser(userID,userName) {
 		data = dataUtil.read();
 		if (verifyUserID(userID))
-			return console.log(msg.userNotAdminMsg(userID));
+			return console.log(msg.userAlreadyExistsMsg(userID));
 
 		data[userID] = {
 			userName: userName,
 			kudo: kudo_init,
 			pt: 0
 		};
+		dataUtil.write(data);
+
+		return msg.userCreationSuccessMsg(userID, userName);
+	}
+	
+	function refresh(userID,userName) {
+		data = dataUtil.read();
+		var pt = 0;
+		if(verifyUserID(userID))
+			pt = data[UserID].pt;
+		
+		data[userID] = {
+			userName: userName,
+			kudo: kudo_init,
+			pt: pt
+		};
+
 		dataUtil.write(data);
 
 		return msg.userCreationSuccessMsg(userID, userName);
