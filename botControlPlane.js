@@ -230,7 +230,10 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
 	
 	// TODO: Error handling
-	return kudoMemberData.addUserPt(targetID, 1) + " " + kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
+	let ret = kudoMemberData.addUserPt(targetID, 1);
+	if (typeof (ret) === "string") return ret;
+
+	return targetID + " " + kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
 }
 
 function handlePrizeReturn(inputMessage, authorID) {
