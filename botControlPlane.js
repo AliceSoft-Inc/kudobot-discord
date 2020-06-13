@@ -5,6 +5,7 @@ const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
 const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo member
 
 const prizeData = require('./database/KudoPrize.json'); 
+const { refresh } = require("./KudoMemberDataInstance.js");
 
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
 
@@ -17,12 +18,7 @@ var adminDMmap = new Map();
 
 client.on("ready", async() => {
 	// client.user.setActivity(" ");
-	// console.log(client.guilds);
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
-	
-	// console.log(client.guilds.cache.get(guildID_test).roles);
-	// console.log(client.guilds.cache.get(guildID_test).roles.cache);
-	// console.log(client.guilds.cache.get(guildID_test).members.cache);
 
 	if (debugMode) console.log("\nCurrent guild role list:");
 	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
@@ -34,19 +30,14 @@ client.on("ready", async() => {
 			if (debugMode) console.log(`	Initiate members info: \n`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
-				try {
-					kudoMemberData.createUser(member.user.id, member.user.username);
-				} catch (err) {
-					console.log(err);
-				}
-
+				kudoMemberData.createUser(member.user.id, member.user.username);
 			});
 		}
 
 		// Populate admin list here.
 		// TODO: revised role name here. 
 		if (role.name === "testRole1") {
-			if (debugMode) console.log(`	Admin under ${role.name} :`);
+			if (debugMode) console.log(`	Admin under ${role.name}:`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
 				kudoAdminData.assignAdmin(member.user.id); 
@@ -86,6 +77,12 @@ client.on("message", async message => {
 	)
 
 	//if(message.channel.type === "dm") return;
+
+	if(!message.content) {
+		kudoMemberData.refresh(message.author.id, message.author.username);
+		userMap = kudoMemberData.getUserMap();
+		return message.channel.send(`New user ${message.author.username}: (${message.author.id}) has been added to member databse.`);
+	}
 	
 	let prefix = botconfig.prefix;
 	let messageArray = message.content.split(" ");
@@ -100,23 +97,44 @@ client.on("message", async message => {
 	switch (cmd) {
 		case `${prefix}kudoPt`:
 			return message.channel.send(handleKudoPtReturn(messageArray, message.author.id));
+			break;
 
 		case `${prefix}kudoAdmin`:
 			if (kudoAdminData.isAdmin(message.author.id))
 				return message.channel.send(handleKudoAdminReturn(messageArray, message.author.id));
 			else return message.channel.send("Permission Denied: Please contact admin.");
+			break;
+
+		case `${prefix}refresh`:
+			if(!messageArray[1]) 
+				return message.channel.send(`error: please enter valid arguments`);
+			else if (!messageArray[1].slice(0, 2) === "<@")
+				return "error: please enter a valid username";
+			
+			var targetID = messageArray[1].slice(2, -1);
+
+			if (kudoAdminData.isAdmin(message.author.id)){
+				kudoMemberData.refresh(targetID, userMap[targetID]);
+				return message.channel.send(`User ${userMap[targetID]} has been refreshed.`);
+			}
+			else return message.channel.send("Permission Denied: Please contact admin.");
+			break;
 		
 		case `${prefix}thumbupTest`:
 			return message.react('👍');	
+			break;
 		
 		case `${prefix}kudos`:
 			return message.channel.send(handleEndorseReturn(messageArray, message.author.id));
+			break;
 
 		case `${prefix}prize`:
 			return message.channel.send(handlePrizeReturn(messageArray, message.author.id));
+			break;
 
 		case `${prefix}kudoDesc`:
 			return message.channel.send(handleKudoDescReturn(messageArray, message.author.id));
+			break;
 
 		case `${prefix}displayInfo`:
 			if (kudoAdminData.isAdmin(message.author.id)) 
@@ -126,6 +144,7 @@ client.on("message", async message => {
 				}
 				else return message.channel.send("Not a valid command, do you mean: \n/displayInfo all");
 			else return message.channel.send("Permission Denied: Please contact admin.");
+			break;
 
 		case `${prefix}help`:
 			// Check premission
@@ -152,6 +171,7 @@ Current Available:
 /prize
 	--checklist
 	--claim <PrizeEnum>
+/refresh <@User>
 				`);
 			else return message.channel.send(
 				`
@@ -167,8 +187,11 @@ Current Available:
 	--checklist
 	--claim <PrizeEnum>
 				`);
+			break;
+
 		default:
 			return message.channel.send("Undefined action. Try /help for more available options.");
+			break;
 	}
 });
 
@@ -228,7 +251,7 @@ function handleEndorseReturn(inputMessage, authorID) {
 	// Important: primary key for user database is currently based on user id.
 	if (debugMode) console.log(inputMessage);
 
-	// TODO: urgly code
+	// TODO: ugly code
 	if (inputMessage[1] === "num") return kudoMemberData.getUserKudo(authorID);
 
 	if(!inputMessage[1] || !inputMessage[2])

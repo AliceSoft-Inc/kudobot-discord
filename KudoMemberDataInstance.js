@@ -35,7 +35,7 @@ var instance = (function() {
 		data = dataUtil.read();
 		var pt = 0;
 		if(verifyUserID(userID))
-			pt = data[UserID].pt;
+			pt = data[userID].pt;
 		
 		data[userID] = {
 			userName: userName,
@@ -177,7 +177,8 @@ var instance = (function() {
 	setUserKudo: setUserKudo,
 	deductUserKudo: deductUserKudo,
 	createUser: createUser,
-	getUserMap: getUserMap
+	getUserMap: getUserMap,
+	refresh: refresh
   };
 })();
 
