@@ -23,7 +23,7 @@ var instance = (function() {
 	}
 
 	function isAdmin(userID) { 
-		return msg.verifyuserID(userID); //TODO: exception handle
+		return verifyuserID(userID); //TODO: exception handle
 	}
 
 	function rmAdmin(userID) {
