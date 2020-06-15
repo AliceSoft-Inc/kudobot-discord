@@ -1,11 +1,12 @@
 const discord = require("discord.js");		//npm install discord.js
 const botconfig = require("./botconfig.json");
+const help = require("./resource/botHelp.js"); // /help text
+const msg = require("./resource/botReturnMessageResource.js");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
 const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo member
 
 const prizeData = require('./database/KudoPrize.json'); 
-const { refresh } = require("./KudoMemberDataInstance.js");
 
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
 
@@ -13,14 +14,17 @@ const client = new discord.Client({disableEveryone: true});
 
 const debugMode = true;  // Debug flag
 
+// Global cache (TODO: find a better solution)
 var userMap;
 var adminDMmap = new Map();
 
 client.on("ready", async() => {
-	// client.user.setActivity(" ");
+	client.user.setActivity(client.guilds.cache.get(guildID_test).name, { type: 'WATCHING'});
+	
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
 
 	if (debugMode) console.log("\nCurrent guild role list:");
+
 	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
 		if (debugMode) console.log("Role ID: " + role.id + ", Role: " + role.name);
 
@@ -69,6 +73,11 @@ client.on("message", async message => {
 		return;
 	}
 
+	if (message.channel.type === "dm") {
+		console.log("\nNew msg handler: DM message. Ignore.")
+		return;
+	}
+
 	if (debugMode) console.log(
 		"\nMessage received from server: \033[1;34m" + message.guild.name + "\033[0m" +
 		"\nSender: \033[1;31m" + message.author.username + "\033[0m" +
@@ -76,24 +85,24 @@ client.on("message", async message => {
 		"\nContent: \"" + message.content + "\""
 	)
 
-	//if(message.channel.type === "dm") return;
-
+	// If content is null, a new user has come in to the channel.
+	// TODO: handle existing user cases
 	if(!message.content) {
 		kudoMemberData.refresh(message.author.id, message.author.username);
 		userMap = kudoMemberData.getUserMap();
-		return message.channel.send(`New user ${message.author.username}: (${message.author.id}) has been added to member databse.`);
+		return message.channel.send(`New user ${message.author.username}: (${message.author.id}) has successfully been added to member databse.`);
 	}
 	
 	let prefix = botconfig.prefix;
-	let messageArray = message.content.split(" ");
+	let messageArray = message.content.split(/\s+/); // split by multiple spaces
 	let cmd = messageArray[0];
-	//let args = messageArray.slice(1);
 
-	if(cmd[0]!==prefix) {
+	if(cmd[0] !== prefix) {
 		console.log("Handler: Not a vaild command. Ignore.");
 		return;
 	}
 
+	// cmd swich panel
 	switch (cmd) {
 		case `${prefix}kudoPt`:
 			return message.channel.send(handleKudoPtReturn(messageArray, message.author.id));
@@ -102,14 +111,14 @@ client.on("message", async message => {
 		case `${prefix}kudoAdmin`:
 			if (kudoAdminData.isAdmin(message.author.id))
 				return message.channel.send(handleKudoAdminReturn(messageArray, message.author.id));
-			else return message.channel.send("Permission Denied: Please contact admin.");
+			else return message.channel.send(msg.permissionDeniedMsg);
 			break;
 
 		case `${prefix}refresh`:
 			if(!messageArray[1]) 
-				return message.channel.send(`error: please enter valid arguments`);
-			else if (messageArray[1].slice(0, 2) !== "<@")
-				return "error: please enter a valid username";
+				return message.channel.send(msg.invalidArgsMsg);
+			else if (!validUserID(messageArray[1]))
+				return message.channel.send(msg.invalidUserIptMsg);
 			
 			var targetID = messageArray[1].slice(2, -1);
 
@@ -117,9 +126,10 @@ client.on("message", async message => {
 				kudoMemberData.refresh(targetID, userMap[targetID]);
 				return message.channel.send(`User ${userMap[targetID]} has been refreshed.`);
 			}
-			else return message.channel.send("Permission Denied: Please contact admin.");
+			else return message.channel.send(msg.permissionDeniedMsg);
 			break;
 		
+		// TODO: implement this method to success cases.
 		case `${prefix}thumbupTest`:
 			return message.react('👍');	
 			break;
@@ -143,50 +153,14 @@ client.on("message", async message => {
 					return message.author.send(JSON.stringify(kudoMemberData.getData()));
 				}
 				else return message.channel.send("Not a valid command, do you mean: \n/displayInfo all");
-			else return message.channel.send("Permission Denied: Please contact admin.");
+			else return message.channel.send(msg.permissionDeniedMsg);
 			break;
 
 		case `${prefix}help`:
 			// Check premission
 			if (kudoAdminData.isAdmin(message.author.id))
-				return message.channel.send(
-					`
-Current Available:
-/kudoAdmin 
-	--assignAdmin <@User>
-	--rmAdmin <@User>
-/kudoPt 
-	--get <@User> 
-	--add <@User> <Add Pt>
-	--set <@User> <Set Pt>
-	--reset <@User>
-/thumbupTest
-/kudos <@User> <Description>
-/kudos num
-/kudoDesc
-	--checkRev <mine/@User>
-	--checkSend <mine/@User>
-	--check <@User>
-/displayInfo <all>
-/prize
-	--checklist
-	--claim <PrizeEnum>
-/refresh <@User>
-				`);
-			else return message.channel.send(
-				`
-Current Available:
-/kudoPt 
-	--get <@User> 
-/thumbupTest
-/kudos <@User> <Description>
-/kudos num
-/kudoDesc
-	--check <@User>
-/prize
-	--checklist
-	--claim <PrizeEnum>
-				`);
+				return message.channel.send(help.helpMenu_admin);
+			else return message.channel.send(help.helpMenu);
 			break;
 
 		default:
@@ -198,23 +172,25 @@ Current Available:
 function handleKudoDescReturn(inputMessage, authorID){
 
 	// TODO: debug
-	if (!inputMessage[1])
-		return "error: please enter valid arguments";
+	if (!inputMessage[1] || !inputMessage[2])
+		return msg.invalidArgsMsg;
 
 	switch (inputMessage[1]) {
 		case "check":
-			if (!inputMessage[2])
-				return "error: please enter valid arguments";
-			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap) + '\n' + kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
+			if (inputMessage[2] === "mine")
+				return kudoDescData.checkRev(authorID, userMap) + '\n' + kudoDescData.checkSend(authorID, userMap);
+			else if (!validUserID(inputMessage[2])) return msg.invalidUserIptMsg;
+			else return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap) + "\n" 
+				+ kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkRev":
 			if (!inputMessage[2])
-				return "error: please enter valid arguments";
+				return msg.invalidArgsMsg;
 			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkSend":
 			if (!inputMessage[2])
-				return "error: please enter valid arguments";
+				return msg.invalidArgsMsg;
 			return kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		default:
@@ -227,10 +203,10 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	if (debugMode) console.log("\n\033[1;34mAdmin Command: \033[0m" + inputMessage[1] + " by user " + authorID+".");
 	
 	if (!inputMessage[1] || !inputMessage[2])
-		return "error: please enter valid arguments";
+		return msg.invalidArgsMsg;
 
-	if (inputMessage[2].slice(0, 2) !== "<@")
-		return "error: please enter a valid username";
+	if (!validUserID(inputMessage[2]))
+		return msg.invalidUserIptMsg;
 
 	var targetID = inputMessage[2].slice(2, -1);
 
@@ -255,12 +231,12 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if (inputMessage[1] === "num") return kudoMemberData.getUserKudo(authorID);
 
 	if(!inputMessage[1] || !inputMessage[2])
-	return "error: please enter valid arguments";
+	return msg.invalidArgsMsg;
 
 	console.log(inputMessage[1].slice(0, 2));
 	
-	if (inputMessage[1].slice(0, 2) !== "<@")
-		return "error: please enter a valid username";
+	if (!validUserID(inputMessage[1]))
+		return msg.invalidUserIptMsg;
 
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
@@ -279,7 +255,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 	// Important: primary key for user database is currently based on user id.
 
 	if (!inputMessage[1])
-		return "error: please enter valid arguments";
+		return msg.invalidArgsMsg;
 
 	switch (inputMessage[1]) {
 		case "checklist":
@@ -288,7 +264,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 	
 		case "claim":
 			if (!inputMessage[2])
-				return "error: please enter valid arguments";
+				return msg.invalidArgsMsg;
 			else if(!prizeData[inputMessage[2]])
 				return `error: Item not in prize list. Please recheck.`;
 			else {
@@ -305,35 +281,34 @@ function handlePrizeReturn(inputMessage, authorID) {
 
 function handleKudoPtReturn(inputMessage, authorID) {
 	if (!inputMessage[2])
-		return "error: please enter valid arguments";
+		return msg.invalidArgsMsg;
 
-	if (!inputMessage[2].slice(0,2) === "<@")
-		return "error: please enter a valid username";
+	if (!validUserID(inputMessage[2]))
+		return msg.invalidUserIptMsg;
 
 	var targetID = inputMessage[2].slice(2, -1);
-	//console.log(targetID);
 
 	switch (inputMessage[1]) {
 		case "get":
 			return kudoMemberData.getUserPt(targetID);
 		
 		case "add":
+			if (!inputMessage[3])
+				return msg.invalidArgsMsg;
+
 			if (kudoAdminData.isAdmin(authorID))
 				return kudoMemberData.addUserPt(targetID, inputMessage[3]);
 				
-			if(!inputMessage[3])
-				return "error: please enter desired Pt number.";
-				 
-			return "Permission Denied: Please contact admin.";
+			return msg.permissionDeniedMsg;
 
 		case "set":
+			if (!inputMessage[3])
+				return msg.invalidArgsMsg;
+	
 			if (kudoAdminData.isAdmin(authorID)) 
 				return kudoMemberData.setUserPt(targetID, inputMessage[3]);
-
-			if (!inputMessage[3])
-				return "error: please enter desired Pt number.";
 				 
-			return "Permission Denied: Please contact admin.";
+			return msg.permissionDeniedMsg;
 
 		case "reset":
 			//console.log(kudoAdminData.getData());
@@ -341,7 +316,7 @@ function handleKudoPtReturn(inputMessage, authorID) {
 			if (kudoAdminData.isAdmin(authorID)) 
 				return kudoMemberData.setUserPt(targetID, 0);  // TODO: return a notification instead of fixed 0 number
 
-			return "Permission Denied: Please contact admin.";
+			return msg.permissionDeniedMsg;
 	
 		default:
 			if (kudoAdminData.isAdmin(authorID))
@@ -351,6 +326,10 @@ function handleKudoPtReturn(inputMessage, authorID) {
 					"/kudoPt set <@User> <Set Pt>"; // Admin
 			else return "Not a valid command, do you mean: \n/kudoPt get <@User>";
 	}
+}
+
+function validUserID(inputMessage) {
+	return (inputMessage.slice(0, 2) === "<@") && (inputMessage.slice(-1) === ">");
 }
 
 client.login(botconfig.token);

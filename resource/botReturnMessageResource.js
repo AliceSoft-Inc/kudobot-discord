@@ -1,10 +1,13 @@
 //error
-const invalidAmountMsg = "error: please enter a valid number for amount.";
-const negativeBalanceMsg = "error: will result in a negative balance, rejected."
+const invalidAmountMsg = "error: Please enter a valid number for amount.";
+const negativeBalanceMsg = "error: Will result in a negative balance, rejected."
 const userNotExistMsg = (id) => {return `error: User ${id} does not exist.`;};
 const adminExistMsg = (id) => {return `error: Admin ${id} already existed.`;};
-const userNotAdminMsg = (id) => {return `error: User ${id} is not under admin premission.`;};
+const userNotAdminMsg = (id) => {return `error: User ${id} is not under admin permission.`;};
 
+const invalidArgsMsg = "error: Please enter valid arguments.";
+const invalidUserIptMsg = "error: Please enter a valid username.";
+const permissionDeniedMsg = "Permission Denied: Please contact admin.";
 
 //warning
 const userAlreadyExistsMsg = (id) =>{return `Warning: User ${id} already exists.`;};
@@ -27,6 +30,9 @@ module.exports = {
 	userNotExistMsg,
 	adminExistMsg,
 	userNotAdminMsg,
+	invalidArgsMsg,
+	invalidUserIptMsg,
+	permissionDeniedMsg,
 	userAlreadyExistsMsg,
 	adminAsignSuccessMsg,
 	adminRemovalSuccessMsg,
