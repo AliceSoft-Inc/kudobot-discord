@@ -13,8 +13,14 @@ var instance = (function() {
 	function getData() { //test use
 		return data;
 	}
+
+	function getAdminList(){
+		data = dataUtil.read();
+		return Object.keys(data).filter(id => data[id] === true);
+	}
 	
 	function assignAdmin(userID) { 
+		data = dataUtil.read();
 		if (verifyuserID(userID))
 			return msg.adminExistMsg(userID);
 
@@ -24,10 +30,12 @@ var instance = (function() {
 	}
 
 	function isAdmin(userID) { 
+		data = dataUtil.read();
 		return verifyuserID(userID); //TODO: exception handle
 	}
 
 	function rmAdmin(userID) {
+		data = dataUtil.read();
 		if (!verifyuserID(userID))
 			return msg.userNotAdminMsg(userID);
 
@@ -47,7 +55,8 @@ var instance = (function() {
 	getData: getData,
 	assignAdmin: assignAdmin,
 	rmAdmin: rmAdmin,
-	isAdmin: isAdmin
+	isAdmin: isAdmin,
+	getAdminList: getAdminList
   };
 })();
 

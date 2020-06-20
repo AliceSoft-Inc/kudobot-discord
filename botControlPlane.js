@@ -16,7 +16,6 @@ const debugMode = true;  // Debug flag
 
 // Global cache (TODO: find a better solution)
 var userMap;
-var adminDMmap = new Map();
 
 client.on("ready", async() => {
 	client.user.setActivity(client.guilds.cache.get(guildID_test).name, { type: 'WATCHING'});
@@ -26,12 +25,12 @@ client.on("ready", async() => {
 	if (debugMode) console.log("\nCurrent guild role list:");
 
 	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
-		if (debugMode) console.log("Role ID: " + role.id + ", Role: " + role.name);
+		if (debugMode) console.log(`	Role ID: ${role.id}, Role: ${role.name}\n`);
 
 		// Initiate members kudo & info here. To specify further, revise logic here.
 
 		if (role.name === "@everyone") {
-			if (debugMode) console.log(`	Initiate members info: \n`);
+			if (debugMode) console.log(`Initiate members info: \n`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
 				kudoMemberData.createUser(member.user.id, member.user.username);
@@ -45,7 +44,6 @@ client.on("ready", async() => {
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
 				kudoAdminData.assignAdmin(member.user.id); 
-				adminDMmap.set(member.user.id, member);
 			});
 		}
 	});
@@ -68,19 +66,19 @@ client.on("message", async message => {
 		return;
 	}
 
-	if(!message.guild.available) {
+	if (message.channel.type === "dm") {
+		console.log("\nNew msg handler: \033[1;34mDM message\033[0m. From " + message.author.username);
+		if (kudoAdminData.isAdmin(message.author.id)) 
+			return message.channel.send("Sorry, currently dm message will be ignored for all non-admin users.");
+	}
+	else if(!message.guild.available) {
 		console.log("\nNew msg handler: Source server unavailable. Ignore.");
 		return;
 	}
-
-	if (message.channel.type === "dm") {
-		console.log("\nNew msg handler: DM message. Ignore.")
-		return;
-	}
+	else console.log("\nNew msg handler: Message received from server: \033[1;34m" + message.guild.name + "\033[0m");
 
 	if (debugMode) console.log(
-		"\nMessage received from server: \033[1;34m" + message.guild.name + "\033[0m" +
-		"\nSender: \033[1;31m" + message.author.username + "\033[0m" +
+		"Sender: \033[1;31m" + message.author.username + "\033[0m" +
 		"\nSenderID: " + message.author.id +
 		"\nContent: \"" + message.content + "\""
 	)
@@ -213,6 +211,7 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	switch (inputMessage[1]) {
 		case "assignAdmin":
 			return kudoAdminData.assignAdmin(targetID);
+			break;
 
 		case "rmAdmin":
 			return kudoAdminData.rmAdmin(targetID);
@@ -270,7 +269,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 			else {
 				let ret = kudoMemberData.deductUserPt(authorID, prizeData[inputMessage[2]].value);
 				if (typeof(ret) === "string") return ret;
-				adminDMmap.values().next().value.send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[inputMessage[2]].name}"`);
+				kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[inputMessage[2]].name}" at ${Date().toString()}`));
 				return `Claim msg prize "${prizeData[inputMessage[2]].name}" has been sent to admin. Remaining Pts: ${ret}.`;
 			}
 
@@ -281,9 +280,10 @@ function handlePrizeReturn(inputMessage, authorID) {
 
 function handleKudoPtReturn(inputMessage, authorID) {
 	if (!inputMessage[2])
-		return msg.invalidArgsMsg;
-
-	if (!validUserID(inputMessage[2]))
+		inputMessage[2] = "<@"+authorID+">";
+	else if (!kudoAdminData.isAdmin(authorID)) 
+		return msg.permissionDeniedMsg;
+	else if (!validUserID(inputMessage[2]))
 		return msg.invalidUserIptMsg;
 
 	var targetID = inputMessage[2].slice(2, -1);
@@ -311,8 +311,6 @@ function handleKudoPtReturn(inputMessage, authorID) {
 			return msg.permissionDeniedMsg;
 
 		case "reset":
-			//console.log(kudoAdminData.getData());
-			console.log(kudoAdminData.isAdmin(authorID));
 			if (kudoAdminData.isAdmin(authorID)) 
 				return kudoMemberData.setUserPt(targetID, 0);  // TODO: return a notification instead of fixed 0 number
 
@@ -324,7 +322,7 @@ function handleKudoPtReturn(inputMessage, authorID) {
 					"/kudoPt reset <@User>\n" + // Admin
 					"/kudoPt add <@User> <Add Pt>\n" + // Admin
 					"/kudoPt set <@User> <Set Pt>"; // Admin
-			else return "Not a valid command, do you mean: \n/kudoPt get <@User>";
+			else return "Not a valid command, do you mean: \n/kudoPt get";
 	}
 }
 

@@ -104,4 +104,10 @@ app.get('/tryCheckSend', async (req, res) => {
 	});
 });
 
+app.get('/getAdminList', async (req, res) => {
+	res.json({
+		message: kudoAdminData.getAdminList()
+	});
+});
+
 app.listen(5180, () => console.log('Node testing server instance started on port 5180'));
