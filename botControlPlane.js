@@ -68,7 +68,7 @@ client.on("message", async message => {
 
 	if (message.channel.type === "dm") {
 		console.log("\nNew msg handler: \033[1;34mDM message\033[0m. From " + message.author.username);
-		if (kudoAdminData.isAdmin(message.author.id)) 
+		if (!kudoAdminData.isAdmin(message.author.id)) 
 			return message.channel.send("Sorry, currently dm message will be ignored for all non-admin users.");
 	}
 	else if(!message.guild.available) {
@@ -211,13 +211,20 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	switch (inputMessage[1]) {
 		case "assignAdmin":
 			return kudoAdminData.assignAdmin(targetID);
+			break;
 
 		case "rmAdmin":
-			return kudoAdminData.rmAdmin(targetID);
+			console.log(kudoAdminData.getAdminList().length);
+			if (kudoAdminData.getAdminList().length == 1)
+				return "Operation Rejected: Currently you are the last admin on list. Removal operation will be dismissed unless there is other admin available."
+			else return kudoAdminData.rmAdmin(targetID);
+			break;
+
 
 		default:
 			return "Not a valid command, do you mean: \n/kudoAdmin assignAdmin <@User>\n" +
 				"/kudoAdmin rmAdmin <@User>\n";
+			break;
 	}
 }
 
