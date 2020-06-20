@@ -27,7 +27,7 @@ const helpMenu =
 `
 Current Available:
 /kudoPt 
-	--get <@User> 
+	--get
 /thumbupTest
 /kudos <@User> <Description>
 /kudos num

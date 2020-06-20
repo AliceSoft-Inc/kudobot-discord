@@ -2,3 +2,4 @@ node*
 package*
 Message API template.js
 Guild API template.js
+*.temp

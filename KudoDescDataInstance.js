@@ -18,7 +18,8 @@ var instance = (function() {
 		newDesc.sender = sender;
 		newDesc.receiver = receiver;
 		newDesc.desc = desc;
-		data.push(newDesc);		
+		newDesc.timestamp = new Date();
+		data.push(newDesc);	
 		dataUtil.write(data);
 		return msg.successful;
 	}

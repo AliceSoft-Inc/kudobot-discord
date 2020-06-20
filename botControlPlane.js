@@ -211,7 +211,6 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	switch (inputMessage[1]) {
 		case "assignAdmin":
 			return kudoAdminData.assignAdmin(targetID);
-			break;
 
 		case "rmAdmin":
 			return kudoAdminData.rmAdmin(targetID);
