@@ -48,11 +48,6 @@ client.on("ready", async() => {
 		}
 	});
 	
-	// TODO: transfer guild data to kudoAdmin?
-
-	// kudoAdminData.setGuildID(client.guilds.cache.keys().next().value); // id => kudoAdminData
-	// kudoAdminData.setGuildData(client.guilds.cache.get(guildID));  // guild => kudoAdminData 
-	
 	// Initialize userMap
 	userMap = kudoMemberData.getUserMap();
 
@@ -143,7 +138,7 @@ client.on("message", async message => {
 		case `${prefix}kudoDesc`:
 			return message.channel.send(handleKudoDescReturn(messageArray, message.author.id));
 			break;
-
+		
 		case `${prefix}displayInfo`:
 			if (kudoAdminData.isAdmin(message.author.id)) 
 				if (messageArray[1] === "all") {
@@ -246,8 +241,12 @@ function handleEndorseReturn(inputMessage, authorID) {
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
 	
-	// TODO: Error handling
-	let ret1 = kudoMemberData.addUserPt(targetID, 1);
+	// Both sender and receiver can get pts.
+	// TODO: better error handling here.
+	let ret1 = kudoMemberData.addUserPt(targetID, botconfig.kudoRevPt);
+	if (typeof (ret1) === "string") return ret1;
+
+	ret1 = kudoMemberData.addUserPt(authorID, botconfig.kudoSendPt);
 	if (typeof (ret1) === "string") return ret1;
 
 	let ret2 = kudoMemberData.deductUserKudo(authorID);

@@ -26,13 +26,10 @@ Current Available:
 const helpMenu =
 `
 Current Available:
-/kudoPt 
-	--get
-/thumbupTest
+/kudoPt get
 /kudos <@User> <Description>
 /kudos num
-/kudoDesc
-	--check <mine/@User>
+/kudoDesc check <mine/@User>
 /prize
 	--checklist
 	--claim <PrizeEnum>
