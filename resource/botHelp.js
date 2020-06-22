@@ -9,7 +9,6 @@ Current Available:
 	--add <@User> <Add Pt>
 	--set <@User> <Set Pt>
 	--reset <@User>
-/thumbupTest
 /kudos <@User> <Description>
 /kudos num
 /kudoDesc

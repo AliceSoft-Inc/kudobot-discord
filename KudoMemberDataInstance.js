@@ -137,9 +137,9 @@ var instance = (function() {
 	
 	function getUserMap(){
 		data = dataUtil.read();
-		var myMap = {};
+		var myMap = new Map();
 		for(var key in data){
-			myMap[key] = data[key].userName;
+			myMap.set(key, data[key].userName);
 		}
 		return myMap;
 	}

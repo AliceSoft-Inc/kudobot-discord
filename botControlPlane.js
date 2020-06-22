@@ -1,17 +1,17 @@
 const discord = require("discord.js");		//npm install discord.js
-const botconfig = require("./botconfig.json");
-const help = require("./resource/botHelp.js"); // /help text
+const {Worker, isMainThread, workerData} = require('worker_threads');
 const msg = require("./resource/botReturnMessageResource.js");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
 const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo member
-
 const prizeData = require('./database/KudoPrize.json'); 
-
-const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
+const botconfig = require("./botconfig.json");
+const help = require("./resource/botHelp.js"); // /help text
 
 const client = new discord.Client({disableEveryone: true});
+const refreshThread = new Worker("./refresh.js");
 
+const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
 const debugMode = true;  // Debug flag
 
 // Global cache (TODO: find a better solution)
@@ -21,7 +21,6 @@ client.on("ready", async() => {
 	client.user.setActivity(client.guilds.cache.get(guildID_test).name, { type: 'WATCHING'});
 	
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
-
 	if (debugMode) console.log("\nCurrent guild role list:");
 
 	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
@@ -61,11 +60,8 @@ client.on("message", async message => {
 		return;
 	}
 
-	if (message.channel.type === "dm") {
+	if (message.channel.type === "dm") 
 		console.log("\nNew msg handler: \033[1;34mDM message\033[0m. From " + message.author.username);
-		if (!kudoAdminData.isAdmin(message.author.id)) 
-			return message.channel.send("Sorry, currently dm message will be ignored for all non-admin users.");
-	}
 	else if(!message.guild.available) {
 		console.log("\nNew msg handler: Source server unavailable. Ignore.");
 		return;
