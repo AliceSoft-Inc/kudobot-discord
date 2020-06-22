@@ -3,5 +3,6 @@
 	"prefix": "/",
 	"helptext" : "工事中",
 	"kudoSendPt": 1,
-	"kudoRevPt": 5
+	"kudoRevPt": 5,
+	"adminRole": "testRole1"
 }

@@ -38,7 +38,7 @@ client.on("ready", async() => {
 
 		// Populate admin list here.
 		// TODO: revised role name here. 
-		if (role.name === "testRole1") {
+		if (role.name === botconfig.adminRole) {
 			if (debugMode) console.log(`	Admin under ${role.name}:`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
@@ -85,6 +85,9 @@ client.on("message", async message => {
 	let prefix = botconfig.prefix;
 	let messageArray = message.content.split(/\s+/); // split by multiple spaces
 	let cmd = messageArray[0];
+
+	if (!kudoAdminData.isAdmin(message.author.id) && message.channel.type === "dm") 
+		return nonAdminDMinterface(messageArray, message.author.id, message.channel);
 
 	if(cmd[0] !== prefix) {
 		console.log("Handler: Not a vaild command. Ignore.");
@@ -138,8 +141,7 @@ client.on("message", async message => {
 		case `${prefix}displayInfo`:
 			if (kudoAdminData.isAdmin(message.author.id)) 
 				if (messageArray[1] === "all") {
-					// TODO: print more formatted list and replace getData method.
-					return message.author.send(JSON.stringify(kudoMemberData.getData()));
+					return message.author.send(printMemberList());
 				}
 				else return message.channel.send("Not a valid command, do you mean: \n/displayInfo all");
 			else return message.channel.send(msg.permissionDeniedMsg);
@@ -149,7 +151,7 @@ client.on("message", async message => {
 			// Check premission
 			if (kudoAdminData.isAdmin(message.author.id))
 				return message.channel.send(help.helpMenu_admin);
-			else return message.channel.send(help.helpMenu);
+			else return message.channel.send(help.helpMenu_public);
 			break;
 
 		default:
@@ -260,7 +262,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 	switch (inputMessage[1]) {
 		case "checklist":
 			// TODO: show formatted string
-			return JSON.stringify(prizeData);
+			return printPrizeList();
 	
 		case "claim":
 			if (!inputMessage[2])
@@ -327,8 +329,63 @@ function handleKudoPtReturn(inputMessage, authorID) {
 	}
 }
 
+
+function nonAdminDMinterface(inputMessage, authorID, channel) {
+	if(debugMode) console.log(`DM interface: received message "${inputMessage}".`);
+	switch (inputMessage[0]) {
+		case "/help":
+			return channel.send(help.helpMenu_DM);
+			break;
+	
+		case "1":
+			return channel.send(`Your current kudo points: ${kudoMemberData.getUserPt(authorID)}`);
+			break;
+
+		case "2":
+			return channel.send(`Currently unavailable`); // TODO
+			break;
+
+		case "3":
+			return channel.send(`You can still give ${kudoMemberData.getUserKudo(authorID)} kudos to others today!`);
+			break;
+
+		case "4":
+			console.log(userMap);
+			return channel.send(`These are your received kudos: \n${kudoDescData.checkRev(authorID, userMap)}`);
+			break;
+
+		case "5":
+			console.log(userMap);
+			return channel.send(`These are your sent kudos: \n${kudoDescData.checkSend(authorID, userMap)}`);
+			break;
+
+		case "6":
+			return channel.send(`Please check the prize list:
+			${printPrizeList()} 
+			You current available kudo points: ${kudoMemberData.getUserPt(authorID)}
+			Reply option index to claim!`);
+			break;
+
+		default:
+			break;
+	}
+}
+
 function validUserID(inputMessage) {
 	return (inputMessage.slice(0, 2) === "<@") && (inputMessage.slice(-1) === ">");
+}
+
+function printPrizeList() {
+	let retString = '';
+	Object.keys(prizeData).forEach(e => retString += `${e}.	${prizeData[e].name} 	= 	${prizeData[e].value} pts\n`);
+	return retString;
+}
+
+function printMemberList() {
+	let retString = 'Member List: \n';
+	let members = kudoMemberData.getUserMap();
+	Object.keys(members).forEach(e => retString += `${members[e]}(${e}): \n    	permission: ${kudoAdminData.isAdmin(e)?"Admin":"User"},	kudo: ${kudoMemberData.getUserKudo(e)},	pt: ${kudoMemberData.getUserPt(e)}\n`);
+	return retString;
 }
 
 client.login(botconfig.token);

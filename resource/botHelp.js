@@ -22,19 +22,31 @@ Current Available:
 /refresh <@User>
 `;
 
-const helpMenu =
+const helpMenu_public =
 `
 Current Available:
 /kudoPt get
 /kudos <@User> <Description>
 /kudos num
-/kudoDesc check <mine/@User>
+/kudoDesc check <mine>
 /prize
 	--checklist
 	--claim <PrizeEnum>
 `;
 
+const helpMenu_DM = 
+`
+Hi! This is kudo bot. You can choose following options here:
+1. Check my current kudo points.
+2. Give kudo to others.
+3. Check my current available kudo times.
+4. Check my received kudos.
+5. Check my sent kudos.
+5. I want to claim a prize.
+`;
+
 module.exports = {
-    helpMenu,
+	helpMenu_public,
+	helpMenu_DM,
     helpMenu_admin
 }

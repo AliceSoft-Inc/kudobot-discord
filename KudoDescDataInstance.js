@@ -31,7 +31,7 @@ var instance = (function() {
 		.filter((x) => {return x.receiver === receiver;})
 		.map((x) => {
 			count++;
-			result += msg.kudoRevBodyMsg(myMap[x.sender], x.desc);
+			result += msg.kudoRevBodyMsg(myMap[x.sender], x.desc, x.timestamp);
 		});
 		result += msg.totalCountMsg(count);
 		return result;
@@ -44,7 +44,7 @@ var instance = (function() {
 		.filter((x) => {return x.sender === sender;})
 		.map((x) => {
 			count++;
-			result += msg.kudoSendBodyMsg(myMap[x.receiver], x.desc);
+			result += msg.kudoSendBodyMsg(myMap[x.receiver], x.desc, x.timestamp);
 		});
 		result += msg.totalCountMsg(count);
 		return result;

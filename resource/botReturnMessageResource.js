@@ -18,9 +18,9 @@ const adminAsignSuccessMsg = (id) => {return `Successfully assigned userID: ${id
 const adminRemovalSuccessMsg = (id) => {return `Successfully removed userID: ${id} from admin.`;};
 const userCreationSuccessMsg = (id, name) => {return `Successfully created user ${id}: ${name}.`;};
 const kudoRevHeadlineMsg = (receiver) => {return `Kudos received by ${receiver}:\n`;};
-const kudoRevBodyMsg = (sender, desc) => {return `Received from: ${sender}, Description: ${desc}\n`;};
+const kudoRevBodyMsg = (sender, desc,timestamp) => { return `Received from: ${sender}, Description: ${desc}, Time: ${timestamp.slice(0,-5)}\n`;};
 const kudoSendHeadlineMsg = (sender) => {return `Kudos sent by ${sender}:\n`;};
-const kudoSendBodyMsg = (receiver, desc) => {return `Sent to: ${receiver}, Description: ${desc}\n`;};
+const kudoSendBodyMsg = (receiver, desc, timestamp) => { return `Sent to: ${receiver}, Description: ${desc}, Time: ${timestamp.slice(0,-5)}\n`;};
 const totalCountMsg = (count) => {return `Total: ${count}\n`;};
 
 module.exports = {
