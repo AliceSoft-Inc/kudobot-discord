@@ -3,6 +3,6 @@ const botCP = require("./botControlPlane.js");
 
 console.log(
     "Author: Jerry Dang & Henry Xu" + '\n' +
-    "Usage: Discord Bot Sample Framwork w/ Api control plane" + '\n' +
+    "Usage: Kudo discord bot" + '\n' +
     "Ver. 1.21"
 );

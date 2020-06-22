@@ -5,7 +5,7 @@ Current Available:
 	--assignAdmin <@User>
 	--rmAdmin <@User>
 /kudoPt 
-	--get <@User> 
+	--get [@User] 
 	--add <@User> <Add Pt>
 	--set <@User> <Set Pt>
 	--reset <@User>
@@ -42,7 +42,7 @@ Hi! This is kudo bot. You can choose following options here:
 3. Check my current available kudo times.
 4. Check my received kudos.
 5. Check my sent kudos.
-5. I want to claim a prize.
+6. I want to claim a prize.
 `;
 
 module.exports = {

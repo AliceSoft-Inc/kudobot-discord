@@ -321,7 +321,7 @@ function handleKudoPtReturn(inputMessage, authorID) {
 	
 		default:
 			if (kudoAdminData.isAdmin(authorID))
-				return "Not a valid command, do you mean: \n/kudoPt get <@User>\n" +
+				return "Not a valid command, do you mean: \n/kudoPt get [@User]\n" +
 					"/kudoPt reset <@User>\n" + // Admin
 					"/kudoPt add <@User> <Add Pt>\n" + // Admin
 					"/kudoPt set <@User> <Set Pt>"; // Admin
@@ -360,10 +360,30 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 			break;
 
 		case "6":
-			return channel.send(`Please check the prize list:
-			${printPrizeList()} 
-			You current available kudo points: ${kudoMemberData.getUserPt(authorID)}
-			Reply option index to claim!`);
+			return channel.send(`${printPrizeList()}\nYou current available kudo points: ${kudoMemberData.getUserPt(authorID)}\nReply an option index to claim!`)
+			.then(() => {
+				let msgFilter = msg => (msg.content[0] in prizeData) && (msg.content.length <= 2) && msg.author.id === authorID;
+				channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors:['maxProcessed', 'time']}).then((collected)=>{
+					let option = collected.first().content;
+					channel.send(`Are you sure to claim ${prizeData[option].name}? Just react a 😄 to confirm!`)
+					.then((message)=>{
+						let rctFilter = (reaction, user) => reaction.emoji.name === '😄' && user.id === authorID;
+						message.awaitReactions(rctFilter, { max: 1, maxEmojis: 2, time: 15000, errors: ['time','maxEmojis']})
+						.then(() => {
+							console.log('awaitReactions resolved!')
+							let ret = kudoMemberData.deductUserPt(authorID, prizeData[option].value);
+							if (typeof (ret) === "string") return channel.send(ret);
+							kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[option].name}" at ${Date().toString()}`));
+							channel.send(`Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
+						})
+						.catch((err) => {
+							console.log(err);
+							channel.send(`Reaction Failed: Claim cancelled.`);
+						});
+					});
+				})
+				.catch((err) => channel.send(`Sorry, either wrong input or time has reach limit. Please try again.`));
+			});
 			break;
 
 		default:
@@ -376,8 +396,8 @@ function validUserID(inputMessage) {
 }
 
 function printPrizeList() {
-	let retString = '';
-	Object.keys(prizeData).forEach(e => retString += `${e}.	${prizeData[e].name} 	= 	${prizeData[e].value} pts\n`);
+	let retString = 'Prize List:\n';
+	Object.keys(prizeData).forEach(e => retString += `    ${e}.	${prizeData[e].name} 	= 	${prizeData[e].value} pts\n`);
 	return retString;
 }
 
