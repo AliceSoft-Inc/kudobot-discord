@@ -7,41 +7,41 @@ class StageLock {
 	return this.locks;
   }
   
-  acquire(owner, writer, stage) {
+  acquire(owner, stage) {
 	  stage = parseInt(stage);
-	  return this.getLock(owner, writer).stage == stage;
+	  return this.getLock(owner).stage == stage;
   }
   
-  releaseAndIncr(owner, writer){
-	  var cur = this.findLock(owner, writer);
+  releaseAndIncr(owner){
+	  var cur = this.findLock(owner);
 	  if(!cur)
 		  return;
 	  
-	  this.removeLock(owner, writer);
+	  this.removeLock(owner);
 	  cur.stage++;
 	  this.locks.push(cur);
   }
   
-  release(owner, writer){
-	  this.removeLock(owner, writer);
+  release(owner){
+	  this.removeLock(owner);
   }
   
   //helper
-  getLock(owner, writer) {
-	  return this.findLock(owner, writer) || this.addLock(owner, writer);
+  getLock(owner) {
+	  return this.findLock(owner) || this.addLock(owner);
   }
   
-  addLock(owner, writer) {
-	this.locks.push({"owner": owner, "writer": writer, "stage": 1});
-	return {"owner": owner, "writer": writer, "stage": 1};
+  addLock(owner) {
+	this.locks.push({"owner": owner, "stage": 1});
+	return {"owner": owner, "stage": 1};
   }
   
-  findLock(owner, writer) {
-	  return this.locks.find(x => (x.owner === owner && x.writer === writer));
+  findLock(owner) {
+	  return this.locks.find(x => (x.owner === owner));
   }
   
-  removeLock(owner, writer) {
-	  this.locks = this.locks.filter(x => (x.owner !== owner && x.writer !== writer));
+  removeLock(owner) {
+	  this.locks = this.locks.filter(x => (x.owner !== owner));
   }
 }
 

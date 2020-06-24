@@ -336,107 +336,101 @@ function handleKudoPtReturn(inputMessage, authorID) {
 
 function nonAdminDMinterface(inputMessage, authorID, channel) {
 	if(debugMode) console.log(`DM interface: received message "${inputMessage}".`);
-	if(!lock.acquire(authorID, authorID, 1))
+	if(!lock.acquire(authorID, 1))
 		return;
 	
 	switch (inputMessage[0]) {
 		case "/help":
-			return sendAndResolveStage1(channel, authorID, help.helpMenu_DM);
+			return sendAndResolveStage(channel, authorID, help.helpMenu_DM);
 			break;
 	
-		case "aa":
-			return sendAndResolveStage1(channel, authorID, `Your current kudo points: ${kudoMemberData.getUserPt(authorID)}`);
+		case "1":
+			return sendAndResolveStage(channel, authorID, `Your current kudo points: ${kudoMemberData.getUserPt(authorID)}`);
 			break;
 
-		case "bb":
+		case "2":
 			let userList = 'Select your kudo target:\n';
 			let userNameList = Object.values(userMap);
 			let userIDList = Object.keys(userMap);
 			
 			for (let i = 0; i < userNameList.length; i++) userList += `${i+1}.   ${userNameList[i]}\n`;
-			lock.releaseAndIncr(authorID, authorID);
+			lock.releaseAndIncr(authorID);
 			
 			return channel.send(userList)
 				.then(() => {
-					if(!lock.acquire(authorID, authorID, 2))
+					if(!lock.acquire(authorID, 2))
 						return;
 
-					let msgFilter = msg => (msg.content[0] < userNameList.length) && (msg.content[0] > 0) && (msg.content.length <= 2) && msg.author.id === authorID;
+					let msgFilter = msg => (msg.content[0] < userNameList.length + 1) && (msg.content[0] > 0) && (msg.content.length <= 2) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 15000, errors: ['processedLimit', 'time'] }).then((collected) => {
 						let option = collected.first().content;
-						lock.releaseAndIncr(authorID, authorID);
+						lock.releaseAndIncr(authorID);
 						channel.send(`Please leave your comments here. To cancel, reply \"Discard\".`)
 							.then(() => {
 								// TODO: Can we make a lock here?
-								if(!lock.acquire(authorID, authorID, 3)) return;
+								if(!lock.acquire(authorID, 3)) return;
 
 								channel.awaitMessages(msg => msg.content !== 'Discard', { maxProcessed: 1, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
 									.then((collected) => {
-										lock.release(authorID, authorID);
-										channel.send(handleEndorseReturn(['/kudo', `<@${userIDList[option]}>`, collected.first().content] ,authorID));
+										sendAndResolveStage(channel, authorID, handleEndorseReturn(['/kudo', `<@${userIDList[option]}>`, collected.first().content] ,authorID));
 									})
 									.catch((err) => {
-										lock.release(authorID, authorID);
-										channel.send(`This kudo is canceled.`);
+										sendAndResolveStage(channel, authorID, `This kudo is canceled.`);
 									});
 							});
 					})
 						.catch((err) => {
-							lock.release(authorID, authorID);
-							channel.send(`Sorry, either wrong input or time has reach limit. Please try again.`)
+							sendAndResolveStage(channel, authorID, `Sorry, either wrong input or time has reach limit. Please try again.`)
 						});
 				});
 			break;
 
-		case "cc":
-			return sendAndResolveStage1(channel, authorID, `You can still give ${kudoMemberData.getUserKudo(authorID)} kudos to others today!`);
+		case "3":
+			return sendAndResolveStage(channel, authorID, `You can still give ${kudoMemberData.getUserKudo(authorID)} kudos to others today!`);
 			break;
 
-		case "dd":
-			return sendAndResolveStage1(channel, authorID, `These are your received kudos: \n${kudoDescData.checkRev(authorID, userMap)}`);
+		case "4":
+			return sendAndResolveStage(channel, authorID, `These are your received kudos: \n${kudoDescData.checkRev(authorID, userMap)}`);
 			break;
 
-		case "ee":
-			return sendAndResolveStage1(channel, authorID, `These are your sent kudos: \n${kudoDescData.checkSend(authorID, userMap)}`);
+		case "5":
+			return sendAndResolveStage(channel, authorID, `These are your sent kudos: \n${kudoDescData.checkSend(authorID, userMap)}`);
 			break;
 
 		// TODO: further test
-		case "ff":
-			lock.releaseAndIncr(authorID, authorID);
+		case "6":
+			lock.releaseAndIncr(authorID);
 			return channel.send(`${printPrizeList()}\nYou current available kudo points: ${kudoMemberData.getUserPt(authorID)}\nReply an option index to claim!`)
 				.then(() => {
-					if(!lock.acquire(authorID, authorID, 2))
+					if(!lock.acquire(authorID, 2))
 						return;
 
 					let msgFilter = msg => (msg.content[0] in prizeData) && (msg.content.length <= 2) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors: ['processedLimit', 'time']}).then((collected)=>{
 						if (debugMode) console.log('DM interface: awaitMessages resolved!');
 						let option = collected.first().content;
-						lock.releaseAndIncr(authorID, authorID);
+						lock.releaseAndIncr(authorID);
 						channel.send(`Are you sure to claim ${prizeData[option].name}? Just react a 😄 to confirm!`)
 						.then((message)=>{
-							if(!lock.acquire(authorID, authorID, 3))
+							if(!lock.acquire(authorID, 3))
 								return;
 
 							let rctFilter = (reaction, user) => reaction.emoji.name === '😄' && user.id === authorID;
-							message.awaitReactions(rctFilter, { max: 1, maxEmojis: 2, time: 15000, errors: ['time','emojiLimit']})
+							message.awaitReactions(rctFilter, { max: 1, maxEmojis: 1, time: 15000, errors: ['time','emojiLimit']})
 							.then(() => {
 								if (debugMode) console.log('DM interface: awaitReactions resolved!');
 								let ret = kudoMemberData.deductUserPt(authorID, prizeData[option].value);
 								if (typeof (ret) === "string") return channel.send(ret);
 								kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[option].name}" at ${Date().toString()}`));
-								lock.release(authorID, authorID);
-								channel.send(`Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
+								sendAndResolveStage(channel, authorID, `Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
 							})
 							.catch((err) => {
-								lock.release(authorID, authorID);
-								channel.send(`Reaction Failed: Claim cancelled.`);
+								sendAndResolveStage(channel, authorID, `Reaction Failed: Claim cancelled.`);
 							});
 						});
 					})
 					.catch((err) => {
-						lock.release(authorID, authorID);
-						channel.send(`Sorry, either wrong input or time has reached limit. Please try again.`)
+						sendAndResolveStage(channel, authorID, `Sorry, either wrong input or time has reached limit. Please try again.`)
 					});
 				});
 			break;
@@ -463,8 +457,8 @@ function printMemberList() {
 	return retString;
 }
 
-function sendAndResolveStage1(channel, authorID, message){
-	lock.release(authorID, authorID); 
+function sendAndResolveStage(channel, authorID, message){
+	lock.release(authorID); 
 	channel.send(message);
 }
 

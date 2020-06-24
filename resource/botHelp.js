@@ -37,12 +37,12 @@ Current Available:
 const helpMenu_DM = 
 `
 Hi! This is kudo bot. You can choose following options here:
-aa. Check my current kudo points.
-bb. Give kudo to others.
-cc. Check my current available kudo times.
-dd. Check my received kudos.
-ee. Check my sent kudos.
-ff. I want to claim a prize.
+1. Check my current kudo points.
+2. Give kudo to others.
+3. Check my current available kudo times.
+4. Check my received kudos.
+5. Check my sent kudos.
+6. I want to claim a prize.
 `;
 
 module.exports = {

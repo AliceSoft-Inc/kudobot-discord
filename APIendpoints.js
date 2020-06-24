@@ -115,29 +115,26 @@ app.get('/getAdminList', async (req, res) => {
 
 app.get('/lockTestAcquire', async (req, res) => {
 	let owner = req.query.owner;
-	let writer = req.query.writer;
 	let stage = req.query.stage;
 	
 	res.json({
-		message: lock.acquire(owner, writer, stage)
+		message: lock.acquire(owner, stage)
 	});
 });
 
 app.get('/lockTestReleaseIncr', async (req, res) => {
 	let owner = req.query.owner;
-	let writer = req.query.writer;
 	
 	res.json({
-		message: lock.releaseAndIncr(owner, writer)
+		message: lock.releaseAndIncr(owner)
 	});
 });
 
 app.get('/lockTestRelease', async (req, res) => {
 	let owner = req.query.owner;
-	let writer = req.query.writer;
 	
 	res.json({
-		message: lock.release(owner, writer)
+		message: lock.release(owner)
 	});
 });
 
