@@ -6,6 +6,9 @@ const app = express();
 const kudoDescData = require("./KudoDescDataInstance.js");
 const kudoMemberData = require("./KudoMemberDataInstance.js");
 const kudoAdminData = require("./KudoAdminDataInstance.js");
+const Lock = require("./StageLock.js");
+
+let lock = new Lock();
 
 app.get('/api', async (req, res) =>{
     res.json({
@@ -107,6 +110,40 @@ app.get('/tryCheckSend', async (req, res) => {
 app.get('/getAdminList', async (req, res) => {
 	res.json({
 		message: kudoAdminData.getAdminList()
+	});
+});
+
+app.get('/lockTestAcquire', async (req, res) => {
+	let owner = req.query.owner;
+	let writer = req.query.writer;
+	let stage = req.query.stage;
+	
+	res.json({
+		message: lock.acquire(owner, writer, stage)
+	});
+});
+
+app.get('/lockTestReleaseIncr', async (req, res) => {
+	let owner = req.query.owner;
+	let writer = req.query.writer;
+	
+	res.json({
+		message: lock.releaseAndIncr(owner, writer)
+	});
+});
+
+app.get('/lockTestRelease', async (req, res) => {
+	let owner = req.query.owner;
+	let writer = req.query.writer;
+	
+	res.json({
+		message: lock.release(owner, writer)
+	});
+});
+
+app.get('/lockcheck', async (req, res) => {	
+	res.json({
+		message: lock.getLocks
 	});
 });
 
