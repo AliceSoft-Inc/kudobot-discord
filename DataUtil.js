@@ -31,6 +31,13 @@ class DataUtil {
 				return console.log(err);
 		});
 	} 
+
+	writeLog(string) {
+		fs.writeFileSync(this.fileName, string, function (err) {
+			if (err)
+				return console.log(err);
+		});
+	}
 	
 	remove(key) {	// TODO: handle exceptions
 		var json = JSON.parse(fs.readFileSync(this.fileName, this.fileEncoding));

@@ -71,6 +71,7 @@ client.on("message", async message => {
 	if (debugMode) console.log(
 		"Sender: \033[1;31m" + message.author.username + "\033[0m" +
 		"\nSenderID: " + message.author.id +
+		"\nPermission: " + (kudoAdminData.isAdmin(message.author.id)? "Admin":"User") +
 		"\nContent: \"" + message.content + "\""
 	)
 
@@ -93,6 +94,8 @@ client.on("message", async message => {
 		console.log("Handler: Not a vaild command. Ignore.");
 		return;
 	}
+
+	if (debugMode) console.log(`Public interface: received command ${cmd}`);
 
 	// cmd swich panel
 	switch (cmd) {
@@ -230,8 +233,6 @@ function handleEndorseReturn(inputMessage, authorID) {
 
 	if(!inputMessage[1] || !inputMessage[2])
 	return msg.invalidArgsMsg;
-
-	console.log(inputMessage[1].slice(0, 2));
 	
 	if (!validUserID(inputMessage[1]))
 		return msg.invalidUserIptMsg;
@@ -337,53 +338,80 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 			return channel.send(help.helpMenu_DM);
 			break;
 	
-		case "1":
+		case "aa":
 			return channel.send(`Your current kudo points: ${kudoMemberData.getUserPt(authorID)}`);
 			break;
 
-		case "2":
-			return channel.send(`Currently unavailable`); // TODO
+		case "bb":
+			let userList = 'Select your kudo target:\n';
+			let userNameList = Object.values(userMap);
+			let userIDList = Object.keys(userMap);
+			for (let i = 0; i < userNameList.length; i++) userList += `${i+1}. ${userNameList[i]}\n`;
+
+			return channel.send(userList)
+				.then(() => {
+					let msgFilter = msg => (msg.content[0] < userNameList.length) && (msg.content[0] > 0) && (msg.content.length <= 2) && msg.author.id === authorID;
+					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors: ['processedLimit', 'time'] }).then((collected) => {
+						let option = collected.first().content;
+						channel.send(`Please leave your comments here. To cancel, reply <Discard>.`)
+							.then((msg) => {
+								// TODO: Can we make a lock here?
+								channel.awaitMessages(() => msg.content !== '<Discard>', { maxProcessed: 1, max: 1, time: 30000, errors: ['processedLimit', 'time'] })
+									.then((collected) => {
+										channel.send(handleEndorseReturn(['/kudo', `<@${userIDList[option]}>`, collected.first().content] ,authorID));
+									})
+									.catch((err) => {
+										channel.send(`This kudo is canceled.`);
+									});
+							});
+					})
+						.catch((err) => {
+							channel.send(`Sorry, either wrong input or time has reach limit. Please try again.`)
+						});
+				});
 			break;
 
-		case "3":
+		case "cc":
 			return channel.send(`You can still give ${kudoMemberData.getUserKudo(authorID)} kudos to others today!`);
 			break;
 
-		case "4":
-			console.log(userMap);
+		case "dd":
 			return channel.send(`These are your received kudos: \n${kudoDescData.checkRev(authorID, userMap)}`);
 			break;
 
-		case "5":
+		case "ee":
 			console.log(userMap);
 			return channel.send(`These are your sent kudos: \n${kudoDescData.checkSend(authorID, userMap)}`);
 			break;
 
-		case "6":
+		// TODO: further test
+		case "ff":
 			return channel.send(`${printPrizeList()}\nYou current available kudo points: ${kudoMemberData.getUserPt(authorID)}\nReply an option index to claim!`)
-			.then(() => {
-				let msgFilter = msg => (msg.content[0] in prizeData) && (msg.content.length <= 2) && msg.author.id === authorID;
-				channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors:['maxProcessed', 'time']}).then((collected)=>{
-					let option = collected.first().content;
-					channel.send(`Are you sure to claim ${prizeData[option].name}? Just react a 😄 to confirm!`)
-					.then((message)=>{
-						let rctFilter = (reaction, user) => reaction.emoji.name === '😄' && user.id === authorID;
-						message.awaitReactions(rctFilter, { max: 1, maxEmojis: 2, time: 15000, errors: ['time','maxEmojis']})
-						.then(() => {
-							console.log('awaitReactions resolved!')
-							let ret = kudoMemberData.deductUserPt(authorID, prizeData[option].value);
-							if (typeof (ret) === "string") return channel.send(ret);
-							kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[option].name}" at ${Date().toString()}`));
-							channel.send(`Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
-						})
-						.catch((err) => {
-							console.log(err);
-							channel.send(`Reaction Failed: Claim cancelled.`);
+				.then(() => {
+					let msgFilter = msg => (msg.content[0] in prizeData) && (msg.content.length <= 2) && msg.author.id === authorID;
+					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors: ['processedLimit', 'time']}).then((collected)=>{
+						if (debugMode) console.log('DM interface: awaitMessages resolved!');
+						let option = collected.first().content;
+						channel.send(`Are you sure to claim ${prizeData[option].name}? Just react a 😄 to confirm!`)
+						.then((message)=>{
+							let rctFilter = (reaction, user) => reaction.emoji.name === '😄' && user.id === authorID;
+							message.awaitReactions(rctFilter, { max: 1, maxEmojis: 2, time: 15000, errors: ['time','maxEmojis']})
+							.then(() => {
+								if (debugMode) console.log('DM interface: awaitReactions resolved!');
+								let ret = kudoMemberData.deductUserPt(authorID, prizeData[option].value);
+								if (typeof (ret) === "string") return channel.send(ret);
+								kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[option].name}" at ${Date().toString()}`));
+								channel.send(`Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
+							})
+							.catch((err) => {
+								channel.send(`Reaction Failed: Claim cancelled.`);
+							});
 						});
+					})
+					.catch((err) => {
+						channel.send(`Sorry, either wrong input or time has reach limit. Please try again.`)
 					});
-				})
-				.catch((err) => channel.send(`Sorry, either wrong input or time has reach limit. Please try again.`));
-			});
+				});
 			break;
 
 		default:

@@ -1,1 +1,1 @@
-# kuroyukibot-discord
+# kudobot-discord
