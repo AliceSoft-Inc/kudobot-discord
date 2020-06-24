@@ -21,7 +21,6 @@ let lock = new Lock(); //Lock
 var userMap;
 
 client.on("ready", async() => {
-	console.log(client.guilds.cache);
 	client.user.setActivity(client.guilds.cache.get(guildID_test).name, { type: 'WATCHING'});
 	
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
@@ -354,7 +353,7 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 			let userNameList = Object.values(userMap);
 			let userIDList = Object.keys(userMap);
 			
-			for (let i = 0; i < userNameList.length; i++) userList += `${i+1}. ${userNameList[i]}\n`;
+			for (let i = 0; i < userNameList.length; i++) userList += `${i+1}.   ${userNameList[i]}\n`;
 			lock.releaseAndIncr(authorID, authorID);
 			
 			return channel.send(userList)
@@ -363,16 +362,15 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 						return;
 
 					let msgFilter = msg => (msg.content[0] < userNameList.length) && (msg.content[0] > 0) && (msg.content.length <= 2) && msg.author.id === authorID;
-					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors: ['processedLimit', 'time'] }).then((collected) => {
+					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 15000, errors: ['processedLimit', 'time'] }).then((collected) => {
 						let option = collected.first().content;
 						lock.releaseAndIncr(authorID, authorID);
-						channel.send(`Please leave your comments here. To cancel, reply <Discard>.`)
-							.then((msg) => {
+						channel.send(`Please leave your comments here. To cancel, reply \"Discard\".`)
+							.then(() => {
 								// TODO: Can we make a lock here?
-								if(!lock.acquire(authorID, authorID, 3))
-									return;
+								if(!lock.acquire(authorID, authorID, 3)) return;
 
-								channel.awaitMessages(() => msg.content !== '<Discard>', { maxProcessed: 1, max: 1, time: 30000, errors: ['processedLimit', 'time'] })
+								channel.awaitMessages(msg => msg.content !== 'Discard', { maxProcessed: 1, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
 									.then((collected) => {
 										lock.release(authorID, authorID);
 										channel.send(handleEndorseReturn(['/kudo', `<@${userIDList[option]}>`, collected.first().content] ,authorID));
@@ -399,7 +397,6 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 			break;
 
 		case "ee":
-			console.log(userMap);
 			return sendAndResolveStage1(channel, authorID, `These are your sent kudos: \n${kudoDescData.checkSend(authorID, userMap)}`);
 			break;
 
