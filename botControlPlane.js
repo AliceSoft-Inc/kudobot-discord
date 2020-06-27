@@ -4,7 +4,7 @@ const msg = require("./resource/botReturnMessageResource.js");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
 const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo member
-const prizeData = require('./database/KudoPrize.json'); 
+const prizeData = require('./database/kudoPrize.json'); 
 const botconfig = require("./botconfig.json");
 const help = require("./resource/botHelp.js"); // /help text
 
