@@ -11,6 +11,10 @@ var instance = (function() {
 	function getData() { //test use
 		return data;
 	}
+
+	function getStringData() {
+		return JSON.stringify(data);
+	}
 		
 	function addDesc(sender, receiver, desc){
 		data = dataUtil.read();
@@ -54,7 +58,8 @@ var instance = (function() {
     getData: getData,
 	addDesc: addDesc,
 	checkRev: checkRev,
-	checkSend: checkSend
+	checkSend: checkSend,
+	getStringData: getStringData
   };
 })();
 

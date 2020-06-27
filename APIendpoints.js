@@ -1,8 +1,8 @@
 const express = require('express');			//npm install express
 
 const app = express();
-//const root = 'D:/dev';
 
+var stream = require('stream');
 const kudoDescData = require("./KudoDescDataInstance.js");
 const kudoMemberData = require("./KudoMemberDataInstance.js");
 const kudoAdminData = require("./KudoAdminDataInstance.js");
@@ -12,7 +12,7 @@ let lock = new Lock();
 
 app.get('/api', async (req, res) =>{
     res.json({
-        message: 'Welcome to the api'
+        message: 'Welcome to the kuroyukibot-<discord ver.> api, this is an AWS EC2 hosted intance'
     });
 });
 
@@ -144,4 +144,21 @@ app.get('/lockcheck', async (req, res) => {
 	});
 });
 
-app.listen(5180, () => console.log('Node testing server instance started on port 5180'));
+app.get('/checkKudoHistory', async(req, res)=> {
+	res.send(kudoDescData.getStringData());
+});
+
+app.get('/downloadKudoHistory', function(req, res){
+  var fileContents = Buffer.from(kudoDescData.getStringData(), 'utf-8');
+  
+  var readStream = new stream.PassThrough();
+  readStream.end(fileContents);
+
+  res.set('Content-disposition', 'attachment; filename=History.txt');
+  res.set('Content-Type', 'text/plain');
+
+  readStream.pipe(res);
+});
+
+
+app.listen(80, () => console.log('Node discord bot testing server instance started on port 80'));
