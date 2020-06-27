@@ -32,8 +32,8 @@ class StageLock {
   }
   
   addLock(owner) {
-	this.locks.push({"owner": owner, "stage": 1});
-	return {"owner": owner, "stage": 1};
+	this.locks.push({"owner": owner, "stage": 0});
+	return {"owner": owner, "stage": 0};
   }
   
   findLock(owner) {
