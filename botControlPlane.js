@@ -56,7 +56,7 @@ client.on("ready", async() => {
 });
 
 client.on("message", async message => {
-	//console.log(message);
+	// console.log(message);
 
 	if(message.author.bot) {
 		console.log("\nNew msg handler: Bot message. Ignore.");
@@ -80,7 +80,7 @@ client.on("message", async message => {
 
 	// If content is null, a new user has come in to the channel.
 	// TODO: handle existing user cases
-	if(!message.content) {
+	if(!message.content && !message.attachments.size) {
 		kudoMemberData.refresh(message.author.id, message.author.username);
 		userMap = kudoMemberData.getUserMap();
 		return message.channel.send(`New user ${message.author.username}: (${message.author.id}) has successfully been added to member databse.`);
@@ -363,7 +363,7 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 
 					let msgFilter = msg => (msg.content[0] < userNameList.length + 1) && (msg.content[0] > 0) && (msg.content.length <= 2) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 15000, errors: ['processedLimit', 'time'] }).then((collected) => {
-						let option = collected.first().content;
+						let option = collected.first().content - 1;
 						lock.releaseAndIncr(authorID);
 						channel.send(`Please leave your comments here. To cancel, reply \"Discard\".`)
 							.then(() => {
@@ -420,7 +420,7 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 							.then(() => {
 								if (debugMode) console.log('DM interface: awaitReactions resolved!');
 								let ret = kudoMemberData.deductUserPt(authorID, prizeData[option].value);
-								if (typeof (ret) === "string") return channel.send(ret);
+								if (typeof (ret) === "string") return sendAndResolveStage(channel, authorID, ret);
 								kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[option].name}" at ${Date().toString()}`));
 								sendAndResolveStage(channel, authorID, `Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
 							})
