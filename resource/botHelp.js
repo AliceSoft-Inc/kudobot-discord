@@ -1,35 +1,37 @@
+const botconfig = require("../botconfig.json");
+
 const helpMenu_admin = 
 `
 Current Available:
-/kudoAdmin 
+${botconfig.prefix}kudoAdmin 
 	--assignAdmin <@User>
 	--rmAdmin <@User>
-/kudoPt 
+${botconfig.prefix}kudoPt 
 	--get [@User] 
 	--add <@User> <Add Pt>
 	--set <@User> <Set Pt>
 	--reset <@User>
-/kudos <@User> <Description>
-/kudos num
-/kudoDesc
+${botconfig.prefix}kudos <@User> <Description>
+${botconfig.prefix}kudos num
+${botconfig.prefix}kudoDesc
 	--checkRev <@User>
 	--checkSend <@User>
-	--check <mine/@User>
-/displayInfo <all>
-/prize
+	--check <mine${botconfig.prefix}@User>
+${botconfig.prefix}displayInfo <all>
+${botconfig.prefix}prize
 	--checklist
 	--claim <PrizeEnum>
-/refresh <@User>
+${botconfig.prefix}refresh <@User>
 `;
 
 const helpMenu_public =
 `
 Current Available:
-/kudoPt get
-/kudos <@User> <Description>
-/kudos num
-/kudoDesc check <mine>
-/prize
+${botconfig.prefix}kudoPt get
+${botconfig.prefix}kudos <@User> <Description>
+${botconfig.prefix}kudos num
+${botconfig.prefix}kudoDesc check <mine>
+${botconfig.prefix}prize
 	--checklist
 	--claim <PrizeEnum>
 `;
@@ -43,6 +45,8 @@ Hi😆! This is kudo bot. You can choose following options here:
 4. Check my received kudos.
 5. Check my sent kudos.
 6. I want to claim a prize.
+
+To terminate, just type "${botconfig.prefix}discard" at any time!
 `;
 
 module.exports = {

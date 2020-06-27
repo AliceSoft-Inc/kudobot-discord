@@ -1,5 +1,5 @@
 const discord = require("discord.js");		//npm install discord.js
-const {Worker, isMainThread, workerData} = require('worker_threads');
+const { Worker, isMainThread, MessageChannel } = require('worker_threads');
 const msg = require("./resource/botReturnMessageResource.js");
 const kudoDescData = require("./KudoDescDataInstance.js"); //kudo desc
 const kudoAdminData = require("./KudoAdminDataInstance.js"); //kudo admin
@@ -12,7 +12,8 @@ const client = new discord.Client({disableEveryone: true});
 const refreshThread = new Worker("./refresh.js");
 
 const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
-const debugMode = true;  // Debug flag
+const debugMode = botconfig.debug;  // Debug flag
+const prefix = botconfig.prefix;
 
 const Lock = require("./StageLock.js");
 let lock = new Lock(); //Lock
@@ -85,20 +86,34 @@ client.on("message", async message => {
 		userMap = kudoMemberData.getUserMap();
 		return message.channel.send(`New user ${message.author.username}: (${message.author.id}) has successfully been added to member databse.`);
 	}
-	
-	let prefix = botconfig.prefix;
+
 	let messageArray = message.content.split(/\s+/); // split by multiple spaces
 	let cmd = messageArray[0];
 
-	if (!kudoAdminData.isAdmin(message.author.id) && message.channel.type === "dm") 
+	if (!kudoAdminData.isAdmin(message.author.id) && message.channel.type === "dm") {
+		if (lock.acquire(message.author.id, 0))
+			if (cmd === `${prefix}help`){
+				if (debugMode) console.log("DM interface: Has been triggered! Now message are passing to dm interface.");
+				lock.releaseAndIncr(message.author.id);
+			}
+			else {
+				if (debugMode) console.log(`DM interface: Has not been triggered. Ignore current msg.`);
+				return;
+			}
+			
 		return nonAdminDMinterface(messageArray, message.author.id, message.channel);
-
-	if(cmd[0] !== prefix) {
-		console.log("Handler: Not a vaild command. Ignore.");
+	}
+	else if(cmd[0] !== prefix) {
+		console.log("Msg Handler: Not a vaild command. Ignore.");
 		return;
 	}
 
+	if (message.mentions.users.size > 1) {
+		return message.channel.send(`Please mention at most one target per command.`);
+	}
+
 	if (debugMode) console.log(`Public interface: received command ${cmd}`);
+	refreshThread.postMessage("reset timer");
 
 	// cmd swich panel
 	switch (cmd) {
@@ -335,14 +350,20 @@ function handleKudoPtReturn(inputMessage, authorID) {
 
 
 function nonAdminDMinterface(inputMessage, authorID, channel) {
-	if(debugMode) console.log(`DM interface: received message "${inputMessage}".`);
 	if(!lock.acquire(authorID, 1))
 		return;
-	
+
+	if (debugMode) console.log(`DM interface: received message "${inputMessage}".`);
+
+	refreshThread.postMessage("reset timer");
+
 	switch (inputMessage[0]) {
-		case "/help":
-			return sendAndResolveStage(channel, authorID, help.helpMenu_DM);
+		case `${prefix}help`:
+			return channel.send(help.helpMenu_DM);
 			break;
+
+		case `${prefix}discard`:
+			return sendAndResolveStage(channel, authorID, "Operation cancelled!");
 	
 		case "1":
 			return sendAndResolveStage(channel, authorID, `Your current kudo points: ${kudoMemberData.getUserPt(authorID)}`);
@@ -361,16 +382,17 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 					if(!lock.acquire(authorID, 2))
 						return;
 
-					let msgFilter = msg => (msg.content[0] < userNameList.length + 1) && (msg.content[0] > 0) && (msg.content.length <= 2) && msg.author.id === authorID;
+					let msgFilter = msg => (((msg.content[0] < userNameList.length + 1) && (msg.content[0] > 0) && (msg.content.length <= 2)) || msg.content === `${prefix}discard`) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 15000, errors: ['processedLimit', 'time'] }).then((collected) => {
+						if (collected.first().content === `${prefix}discard`) return sendAndResolveStage(channel, authorID, "Operation cancelled!");
 						let option = collected.first().content - 1;
 						lock.releaseAndIncr(authorID);
-						channel.send(`Please leave your comments here. To cancel, reply \"Discard\".`)
+						channel.send(`Please leave your comments here. To cancel, reply \"${prefix}discard\".`)
 							.then(() => {
 								// TODO: Can we make a lock here?
 								if(!lock.acquire(authorID, 3)) return;
 
-								channel.awaitMessages(msg => msg.content !== 'Discard', { maxProcessed: 1, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
+								channel.awaitMessages(msg => msg.content !== `${prefix}discard`, { maxProcessed: 1, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
 									.then((collected) => {
 										sendAndResolveStage(channel, authorID, handleEndorseReturn(['/kudo', `<@${userIDList[option]}>`, collected.first().content] ,authorID));
 									})
@@ -405,9 +427,10 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 					if(!lock.acquire(authorID, 2))
 						return;
 
-					let msgFilter = msg => (msg.content[0] in prizeData) && (msg.content.length <= 2) && msg.author.id === authorID;
+					let msgFilter = msg => (((msg.content[0] in prizeData) && (msg.content.length <= 2)) || msg.content === `${prefix}discard`) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors: ['processedLimit', 'time']}).then((collected)=>{
 						if (debugMode) console.log('DM interface: awaitMessages resolved!');
+						if (collected.first().content === `${prefix}discard`) return sendAndResolveStage(channel, authorID, "Operation cancelled!");
 						let option = collected.first().content;
 						lock.releaseAndIncr(authorID);
 						channel.send(`Are you sure to claim ${prizeData[option].name}? Just react a 😄 to confirm!`)

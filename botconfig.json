@@ -2,9 +2,10 @@
 	"token": "NDkzOTM4OTMzNTA0NDA5NjAx.DpGzlQ.E8HG3Zs8SRCam3fOWrI_mpn5cnI",
 	"prefix": "/",
 	"helptext" : "工事中",
+	"debug": true,
 	"kudoSendPt": 1,
 	"kudoRevPt": 5,
 	"adminRole": "testRole1",
 	"refreshTime": 1,
-	"refreshTimeUnit" : "Day"
+	"refreshTimeUnit" : "DAY"
 }
