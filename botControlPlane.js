@@ -374,7 +374,15 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 			let userNameList = Object.values(userMap);
 			let userIDList = Object.keys(userMap);
 			
-			for (let i = 0; i < userNameList.length; i++) userList += `${i+1}.   ${userNameList[i]}\n`;
+			for (let i = 0; i < userNameList.length; i++) {
+				if(userNameList[i] === userMap[authorID]) {
+					userNameList.splice(i, 1);
+					userIDList.splice(i, 1);
+					i--;
+					continue;
+				}
+				userList += `${i+1}.   ${userNameList[i]}\n`;
+			};
 			lock.releaseAndIncr(authorID);
 			
 			return channel.send(userList)
@@ -383,7 +391,7 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 						return;
 
 					let msgFilter = msg => (((msg.content[0] < userNameList.length + 1) && (msg.content[0] > 0) && (msg.content.length <= 2)) || msg.content === `${prefix}discard`) && msg.author.id === authorID;
-					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 15000, errors: ['processedLimit', 'time'] }).then((collected) => {
+					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 60000, errors: ['processedLimit', 'time'] }).then((collected) => {
 						if (collected.first().content === `${prefix}discard`) return sendAndResolveStage(channel, authorID, "Operation cancelled!");
 						let option = collected.first().content - 1;
 						lock.releaseAndIncr(authorID);
@@ -428,7 +436,7 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 						return;
 
 					let msgFilter = msg => (((msg.content[0] in prizeData) && (msg.content.length <= 2)) || msg.content === `${prefix}discard`) && msg.author.id === authorID;
-					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 30000, errors: ['processedLimit', 'time']}).then((collected)=>{
+					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 60000, errors: ['processedLimit', 'time']}).then((collected)=>{
 						if (debugMode) console.log('DM interface: awaitMessages resolved!');
 						if (collected.first().content === `${prefix}discard`) return sendAndResolveStage(channel, authorID, "Operation cancelled!");
 						let option = collected.first().content;
