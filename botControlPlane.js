@@ -11,7 +11,6 @@ const help = require("./resource/botHelp.js"); // /help text
 const client = new discord.Client({disableEveryone: true});
 const refreshThread = new Worker("./refresh.js");
 
-const guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. 
 const debugMode = botconfig.debug;  // Debug flag
 const prefix = botconfig.prefix;
 
@@ -20,11 +19,14 @@ let lock = new Lock(); //Lock
 
 // Global cache (TODO: find a better solution)
 var userMap;
+var guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. When release, replace all guildID_test to guildID.
 
 client.on("ready", async() => {
 	client.user.setActivity(client.guilds.cache.get(guildID_test).name, { type: 'WATCHING'});
 	
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
+	// guildID = client.guilds.cache.keys().next().value;
+	
 	if (debugMode) console.log("\nCurrent guild role list:");
 
 	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
@@ -66,8 +68,8 @@ client.on("message", async message => {
 
 	if (message.channel.type === "dm") 
 		console.log("\nNew msg handler: \033[1;34mDM message\033[0m. From " + message.author.username);
-	else if(!message.guild.available) {
-		console.log("\nNew msg handler: Source server unavailable. Ignore.");
+	else if(!message.guild.available || message.guild.id !== guildID_test) {
+		console.log("\nNew msg handler: Not from target guild. Ignore.");
 		return;
 	}
 	else console.log("\nNew msg handler: Message received from server: \033[1;34m" + message.guild.name + "\033[0m");
