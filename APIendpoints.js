@@ -145,11 +145,14 @@ app.get('/lockcheck', async (req, res) => {
 });
 
 app.get('/checkKudoHistory', async(req, res)=> {
-	res.send(kudoDescData.getStringData());
+	let map = kudoMemberData.getUserMap();
+	res.send(kudoDescData.getPrettyFormatData(map));
 });
 
 app.get('/downloadKudoHistory', function(req, res){
-  var fileContents = Buffer.from(kudoDescData.getStringData(), 'utf-8');
+  let map = kudoMemberData.getUserMap();
+  var fileContents = Buffer.from(
+	  JSON.stringify(kudoDescData.getPrettyFormatData(map)), 'utf-8');
   
   var readStream = new stream.PassThrough();
   readStream.end(fileContents);
