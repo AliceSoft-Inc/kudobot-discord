@@ -11,12 +11,12 @@ ${botconfig.prefix}kudoPt
 	--add <@User> <Add Pt>
 	--set <@User> <Set Pt>
 	--reset <@User>
-${botconfig.prefix}kudos <@User> <Description>
-${botconfig.prefix}kudos num
+${botconfig.prefix}kudo <@User> <Comment>
+${botconfig.prefix}kudo num
 ${botconfig.prefix}kudoDesc
 	--checkRev <@User>
 	--checkSend <@User>
-	--check <mine${botconfig.prefix}@User>
+	--check [mine/@User]
 ${botconfig.prefix}displayInfo <all>
 ${botconfig.prefix}prize
 	--checklist
@@ -28,9 +28,9 @@ const helpMenu_public =
 `
 Current Available:
 ${botconfig.prefix}kudoPt get
-${botconfig.prefix}kudos <@User> <Description>
-${botconfig.prefix}kudos num
-${botconfig.prefix}kudoDesc check <mine>
+${botconfig.prefix}kudo <@User> <Comment>
+${botconfig.prefix}kudo num
+${botconfig.prefix}kudoDesc check
 ${botconfig.prefix}prize
 	--checklist
 	--claim <PrizeEnum>
@@ -46,7 +46,7 @@ Hi😆! This is kudo bot. You can choose following options here:
 5. Check my sent kudos.
 6. I want to claim a prize.
 
-To terminate, just type "${botconfig.prefix}discard" at any time!
+To terminate, just type "${botconfig.prefix}cancel" at any time!
 `;
 
 module.exports = {

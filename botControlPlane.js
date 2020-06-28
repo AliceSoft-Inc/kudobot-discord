@@ -43,7 +43,6 @@ client.on("ready", async() => {
 		}
 
 		// Populate admin list here.
-		// TODO: revised role name here. 
 		if (role.name === botconfig.adminRole) {
 			if (debugMode) console.log(`	Admin under ${role.name}:`);
 			role.members.forEach(member => {
@@ -94,13 +93,13 @@ client.on("message", async message => {
 
 	if (!kudoAdminData.isAdmin(message.author.id) && message.channel.type === "dm") {
 		if (lock.acquire(message.author.id, 0))
-			if (cmd === `${prefix}help`){
+			if (cmd === `${prefix}kudo`){
 				if (debugMode) console.log("DM interface: Has been triggered! Now message are passing to dm interface.");
 				lock.releaseAndIncr(message.author.id);
 			}
 			else {
 				if (debugMode) console.log(`DM interface: Has not been triggered. Ignore current msg.`);
-				return;
+				return message.channel.send(`Invalid command or action timed out. Type ${prefix}kudo to get started`);;
 			}
 			
 		return nonAdminDMinterface(messageArray, message.author.id, message.channel);
@@ -148,10 +147,6 @@ client.on("message", async message => {
 		case `${prefix}thumbupTest`:
 			return message.react('👍');	
 			break;
-		
-		case `${prefix}kudos`:
-			return message.channel.send(handleEndorseReturn(messageArray, message.author.id));
-			break;
 
 		case `${prefix}prize`:
 			return message.channel.send(handlePrizeReturn(messageArray, message.author.id));
@@ -166,32 +161,38 @@ client.on("message", async message => {
 				if (messageArray[1] === "all") {
 					return message.author.send(printMemberList());
 				}
-				else return message.channel.send("Not a valid command, do you mean: \n/displayInfo all");
+				else return message.channel.send(`Not a valid command, do you mean: \n${prefix}displayInfo all`);
 			else return message.channel.send(msg.permissionDeniedMsg);
 			break;
 
-		case `${prefix}help`:
-			// Check premission
-			if (kudoAdminData.isAdmin(message.author.id))
-				return message.channel.send(help.helpMenu_admin);
-			else return message.channel.send(help.helpMenu_public);
+		case `${prefix}kudo`:
+			if (messageArray.length == 1)
+				// Help menu. Check premission
+				if (kudoAdminData.isAdmin(message.author.id))
+					return message.channel.send(help.helpMenu_admin);
+				else return message.channel.send(help.helpMenu_public);
+			else 
+				if (debugMode) return message.channel.send(handleEndorseReturn(messageArray, message.author.id));
+				else {
+					let ret = handleEndorseReturn(messageArray, message.author.id);
+					if (ret === msg.confirmed) return message.react('👍');
+					else message.channel.send(ret);
+				}
 			break;
 
 		default:
-			return message.channel.send("Undefined action. Try /help for more available options.");
+			// return message.channel.send(`Undefined action. Try ${prefix}kudo for more available options.`);
 			break;
 	}
 });
 
 function handleKudoDescReturn(inputMessage, authorID){
-
-	// TODO: debug
-	if (!inputMessage[1] || !inputMessage[2])
+	if (!inputMessage[1])
 		return msg.invalidArgsMsg;
 
 	switch (inputMessage[1]) {
 		case "check":
-			if (inputMessage[2] === "mine")
+			if (inputMessage[2] === "mine" || !inputMessage[2])
 				return kudoDescData.checkRev(authorID, userMap) + '\n' + kudoDescData.checkSend(authorID, userMap);
 			else if (!validUserID(inputMessage[2])) return msg.invalidUserIptMsg;
 			else return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap) + "\n" 
@@ -208,8 +209,12 @@ function handleKudoDescReturn(inputMessage, authorID){
 			return kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		default:
-			return "Not a valid command, do you mean: \n/kudoAdmin assignAdmin <@User>\n" +
-				"/kudoAdmin rmAdmin <@User>\n";
+			if (kudoAdminData.isAdmin(authorID))
+				return `Not a valid command, do you mean: 
+${prefix}kudoDesc check [mine/@User]
+${prefix}kudoDesc checkRev <@User>
+${prefix}kudoDesc checkRev <@User>`;
+			else return `Not a valid command, do you mean: \n${prefix}kudoDesc check`;
 	}
 }
 
@@ -238,8 +243,9 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 
 
 		default:
-			return "Not a valid command, do you mean: \n/kudoAdmin assignAdmin <@User>\n" +
-				"/kudoAdmin rmAdmin <@User>\n";
+			return `Not a valid command, do you mean: 
+${prefix}kudoAdmin assignAdmin <@User>
+${prefix}kudoAdmin rmAdmin <@User>`;
 			break;
 	}
 }
@@ -259,6 +265,9 @@ function handleEndorseReturn(inputMessage, authorID) {
 
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
+
+	if (inputMessage[2].length < botconfig.kudoDescMinimal) 
+		return `Minimal length for a comment is ${botconfig.kudoDescMinimal} characters. You now have ${inputMessage[2].length} characters. Try to write a bit more to your friend!`;
 	
 	// Both sender and receiver can get pts.
 	// TODO: better error handling here.
@@ -271,7 +280,12 @@ function handleEndorseReturn(inputMessage, authorID) {
 	let ret2 = kudoMemberData.deductUserKudo(authorID);
 	if (typeof (ret2) === "string") return ret2;
 
-	return targetID + " " + kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
+	if (debugMode) 
+		return `targetID: ${targetID}, status: ${kudoDescData.addDesc(authorID, targetID, inputMessage[2])}, author pt: ${ret1}, author kudo: ${ret2}.`;
+	
+	let ret3 = kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
+
+	return ret3 === msg.successful ? msg.confirmed : ret3;
 }
 
 function handlePrizeReturn(inputMessage, authorID) {
@@ -282,7 +296,6 @@ function handlePrizeReturn(inputMessage, authorID) {
 
 	switch (inputMessage[1]) {
 		case "checklist":
-			// TODO: show formatted string
 			return printPrizeList();
 	
 		case "claim":
@@ -294,11 +307,11 @@ function handlePrizeReturn(inputMessage, authorID) {
 				let ret = kudoMemberData.deductUserPt(authorID, prizeData[inputMessage[2]].value);
 				if (typeof(ret) === "string") return ret;
 				kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[inputMessage[2]].name}" at ${Date().toString()}`));
-				return `Claim msg prize "${prizeData[inputMessage[2]].name}" has been sent to admin. Remaining Pts: ${ret}.`;
+				return `Claim msg for prize "${prizeData[inputMessage[2]].name}" has been sent to admin. Remaining Pts: ${ret}.`;
 			}
 
 		default:
-			return `Not a valid command, do you mean: \n/prize checklist\n/prize claim <PrizeEnum>`;
+			return `Not a valid command, do you mean: \n${prefix}prize checklist\n${prefix}prize claim <PrizeEnum>`;
 	}
 }
 
@@ -314,14 +327,14 @@ function handleKudoPtReturn(inputMessage, authorID) {
 
 	switch (inputMessage[1]) {
 		case "get":
-			return kudoMemberData.getUserPt(targetID);
+			return `User ${userMap[authorID]} currently has ${kudoMemberData.getUserPt(targetID)} points.`;
 		
 		case "add":
 			if (!inputMessage[3])
 				return msg.invalidArgsMsg;
 
 			if (kudoAdminData.isAdmin(authorID))
-				return kudoMemberData.addUserPt(targetID, inputMessage[3]);
+				return `User ${userMap[authorID]} currently has ${kudoMemberData.addUserPt(targetID, inputMessage[3])} points.`;
 				
 			return msg.permissionDeniedMsg;
 
@@ -330,23 +343,24 @@ function handleKudoPtReturn(inputMessage, authorID) {
 				return msg.invalidArgsMsg;
 	
 			if (kudoAdminData.isAdmin(authorID)) 
-				return kudoMemberData.setUserPt(targetID, inputMessage[3]);
+				return `User ${userMap[authorID]} currently has ${kudoMemberData.setUserPt(targetID, inputMessage[3])} points.`;
 				 
 			return msg.permissionDeniedMsg;
 
 		case "reset":
 			if (kudoAdminData.isAdmin(authorID)) 
-				return kudoMemberData.setUserPt(targetID, 0);  // TODO: return a notification instead of fixed 0 number
+				return `User ${userMap[authorID]} has been reset to ${kudoMemberData.setUserPt(targetID, 0)} points.`;
 
 			return msg.permissionDeniedMsg;
 	
 		default:
 			if (kudoAdminData.isAdmin(authorID))
-				return "Not a valid command, do you mean: \n/kudoPt get [@User]\n" +
-					"/kudoPt reset <@User>\n" + // Admin
-					"/kudoPt add <@User> <Add Pt>\n" + // Admin
-					"/kudoPt set <@User> <Set Pt>"; // Admin
-			else return "Not a valid command, do you mean: \n/kudoPt get";
+				return `Not a valid command, do you mean: 
+${prefix}kudoPt get [@User]
+${prefix}kudoPt reset <@User>
+${prefix}kudoPt add <@User> <Add Pt>
+${prefix}kudoPt set <@User> <Set Pt>` ;
+			else return `Not a valid command, do you mean: \n${prefix}kudoPt get`;
 	}
 }
 
@@ -360,18 +374,26 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 	refreshThread.postMessage("reset timer");
 
 	switch (inputMessage[0]) {
-		case `${prefix}help`:
+		case `${prefix}kudo`:
+			// This is for "/kudo X" shortcut. When add cases, revise these lines.
+			if(inputMessage[1] > 0 && inputMessage[1] < 7) {
+				return nonAdminDMinterface(inputMessage[1], authorID, channel);
+			}
+
 			return channel.send(help.helpMenu_DM);
 			break;
 
-		case `${prefix}discard`:
-			return sendAndResolveStage(channel, authorID, "Operation cancelled!");
+		case `${prefix}cancel`:
+			return sendAndResolveStage(channel, authorID, msg.cancelled);
 	
 		case "1":
 			return sendAndResolveStage(channel, authorID, `Your current kudo points: ${kudoMemberData.getUserPt(authorID)}`);
 			break;
 
 		case "2":
+			if (!kudoMemberData.getUserKudo(authorID))
+				return sendAndResolveStage(channel, authorID, msg.negativeKudoMsg);
+
 			let userList = 'Select your kudo target:\n';
 			let userNameList = Object.values(userMap);
 			let userIDList = Object.keys(userMap);
@@ -392,24 +414,23 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 					if(!lock.acquire(authorID, 2))
 						return;
 
-					let msgFilter = msg => (((msg.content[0] < userNameList.length + 1) && (msg.content[0] > 0) && (msg.content.length <= 2)) || msg.content === `${prefix}discard`) && msg.author.id === authorID;
+					let msgFilter = msg => (((msg.content[0] < userNameList.length + 1) && (msg.content[0] > 0) && (msg.content.length <= 2)) || msg.content === `${prefix}cancel`) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 60000, errors: ['processedLimit', 'time'] }).then((collected) => {
-						if (collected.first().content === `${prefix}discard`) return sendAndResolveStage(channel, authorID, "Operation cancelled!");
+						if (collected.first().content === `${prefix}cancel`) return sendAndResolveStage(channel, authorID, msg.cancelled);
 						let option = collected.first().content - 1;
 						lock.releaseAndIncr(authorID);
-						channel.send(`Please leave your comments here. To cancel, reply \"${prefix}discard\".`)
-							.then(() => {
-								// TODO: Can we make a lock here?
-								if(!lock.acquire(authorID, 3)) return;
+						channel.send(`Please leave your comments here. To cancel, reply \"${prefix}cancel\".`)
+						.then(() => {
+							if(!lock.acquire(authorID, 3)) return;
 
-								channel.awaitMessages(msg => msg.content !== `${prefix}discard`, { maxProcessed: 1, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
-									.then((collected) => {
-										sendAndResolveStage(channel, authorID, handleEndorseReturn(['/kudo', `<@${userIDList[option]}>`, collected.first().content] ,authorID));
-									})
-									.catch((err) => {
-										sendAndResolveStage(channel, authorID, `This kudo is canceled.`);
-									});
+							channel.awaitMessages(msg => msg.content !== `${prefix}cancel`, { maxProcessed: 1, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
+							.then((collected) => {
+								sendAndResolveStage(channel, authorID, handleEndorseReturn(['/kudo', `<@${userIDList[option]}>`, collected.first().content] ,authorID));
+							})
+							.catch((err) => {
+								sendAndResolveStage(channel, authorID, `This kudo is canceled.`);
 							});
+						});
 					})
 						.catch((err) => {
 							sendAndResolveStage(channel, authorID, `Sorry, either wrong input or time has reach limit. Please try again.`)
@@ -437,30 +458,52 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 					if(!lock.acquire(authorID, 2))
 						return;
 
-					let msgFilter = msg => (((msg.content[0] in prizeData) && (msg.content.length <= 2)) || msg.content === `${prefix}discard`) && msg.author.id === authorID;
+					let msgFilter = msg => (((msg.content[0] in prizeData) && (msg.content.length <= 2)) || msg.content === `${prefix}cancel`) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 60000, errors: ['processedLimit', 'time']}).then((collected)=>{
 						if (debugMode) console.log('DM interface: awaitMessages resolved!');
-						if (collected.first().content === `${prefix}discard`) return sendAndResolveStage(channel, authorID, "Operation cancelled!");
+						if (collected.first().content === `${prefix}cancel`) return sendAndResolveStage(channel, authorID, msg.cancelled);
 						let option = collected.first().content;
 						lock.releaseAndIncr(authorID);
-						channel.send(`Are you sure to claim ${prizeData[option].name}? Just react a 😄 to confirm!`)
-						.then((message)=>{
-							if(!lock.acquire(authorID, 3))
+
+						channel.send(`Are you sure to claim ${prizeData[option].name}? \n    1. Yes\n    2. No`)
+						.then((message) => {
+							if (!lock.acquire(authorID, 3))
 								return;
 
-							let rctFilter = (reaction, user) => reaction.emoji.name === '😄' && user.id === authorID;
-							message.awaitReactions(rctFilter, { max: 1, maxEmojis: 1, time: 15000, errors: ['time','emojiLimit']})
-							.then(() => {
+							let filter = msg => (msg.content === `${prefix}cancel`) || (msg.content.length === 1 && msg.content < 3 && msg.content > 0);
+							channel.awaitMessages(filter, { maxProcessed: 3, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
+							.then((collected) => {
 								if (debugMode) console.log('DM interface: awaitReactions resolved!');
+								if (collected.first().content === `${prefix}cancel` || collected.first().content === "2") return sendAndResolveStage(channel, authorID, msg.cancelled);
+
 								let ret = kudoMemberData.deductUserPt(authorID, prizeData[option].value);
 								if (typeof (ret) === "string") return sendAndResolveStage(channel, authorID, ret);
 								kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[option].name}" at ${Date().toString()}`));
 								sendAndResolveStage(channel, authorID, `Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
 							})
 							.catch((err) => {
-								sendAndResolveStage(channel, authorID, `Reaction Failed: Claim cancelled.`);
+								sendAndResolveStage(channel, authorID, `Confirmation Failed: Claim cancelled.`);
 							});
 						});
+						
+						// channel.send(`Are you sure to claim ${prizeData[option].name}? Just react a 😄 to confirm!`)
+						// .then((message)=>{
+						// 	if(!lock.acquire(authorID, 3))
+						// 		return;
+
+						// 	let rctFilter = (reaction, user) => reaction.emoji.name === '😄' && user.id === authorID;
+						// 	message.awaitReactions(rctFilter, { max: 1, maxEmojis: 1, time: 15000, errors: ['time','emojiLimit']})
+						// 	.then(() => {
+						// 		if (debugMode) console.log('DM interface: awaitReactions resolved!');
+						// 		let ret = kudoMemberData.deductUserPt(authorID, prizeData[option].value);
+						// 		if (typeof (ret) === "string") return sendAndResolveStage(channel, authorID, ret);
+						// 		kudoAdminData.getAdminList().forEach(id => client.users.resolve(id).send(`User ID: ${authorID}, User Name: ${userMap[authorID]}, Claimed prize: "${prizeData[option].name}" at ${Date().toString()}`));
+						// 		sendAndResolveStage(channel, authorID, `Successfully claimed prize "${prizeData[option].name}"! Message has been sent to admin. Remaining Pts: ${ret}.`);
+						// 	})
+						// 	.catch((err) => {
+						// 		sendAndResolveStage(channel, authorID, `Reaction Failed: Claim cancelled.`);
+						// 	});
+						// });
 					})
 					.catch((err) => {
 						sendAndResolveStage(channel, authorID, `Sorry, either wrong input or time has reached limit. Please try again.`)

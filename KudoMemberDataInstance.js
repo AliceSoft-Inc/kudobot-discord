@@ -93,7 +93,7 @@ var instance = (function() {
 		var amountInt = parseInt(amount);
 		
 		if(data[userID].pt - amountInt < 0)
-			return msg.negativeBalanceMsg;
+			return msg.negativePtMsg;
 		
 		data[userID].pt -= amountInt; //TODO: exception handle
 		dataUtil.write(data);
@@ -128,7 +128,7 @@ var instance = (function() {
 			return msg.userNotExistMsg(userID);
 		
 		if(data[userID].kudo === 0)
-			return msg.negativeBalanceMsg;
+			return msg.negativeKudoMsg;
 		
 		data[userID].kudo--; //TODO: exception handle
 		dataUtil.write(data);

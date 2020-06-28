@@ -1,9 +1,10 @@
 //error
 const invalidAmountMsg = "error: Please enter a valid number for amount.";
-const negativeBalanceMsg = "error: Will result in a negative balance, rejected."
+const negativePtMsg = "You have insufficient points, you can earn more kudo points by receiving kudos from others. Keep up the good work!";
 const userNotExistMsg = (id) => {return `error: User ${id} does not exist.`;};
 const adminExistMsg = (id) => {return `error: Admin ${id} already existed.`;};
 const userNotAdminMsg = (id) => {return `error: User ${id} is not under admin permission.`;};
+const negativeKudoMsg = "You can no longer give out more kudos today, please try again tomorrow!";
 
 const invalidArgsMsg = "error: Please enter valid arguments.";
 const invalidUserIptMsg = "error: Please enter a valid username.";
@@ -14,6 +15,8 @@ const userAlreadyExistsMsg = (id) =>{return `Warning: User ${id} already exists.
 
 //info
 const successful = "successful";
+const confirmed = "Action confirmed!";
+const cancelled = "Operation cancelled!";
 const adminAsignSuccessMsg = (id) => {return `Successfully assigned userID: ${id} as admin.`;};
 const adminRemovalSuccessMsg = (id) => {return `Successfully removed userID: ${id} from admin.`;};
 const userCreationSuccessMsg = (id, name) => {return `Successfully created user ${id}: ${name}.`;};
@@ -25,8 +28,11 @@ const totalCountMsg = (count) => {return `Total: ${count}\n`;};
 
 module.exports = {
 	successful,
+	confirmed,
+	cancelled,
 	invalidAmountMsg,
-	negativeBalanceMsg,
+	negativePtMsg,
+	negativeKudoMsg,
 	userNotExistMsg,
 	adminExistMsg,
 	userNotAdminMsg,
