@@ -53,13 +53,27 @@ var instance = (function() {
 		result += msg.totalCountMsg(count);
 		return result;
 	}
+
+	function getPrettyFormatData(myMap){
+		data = dataUtil.read();
+		let result = 
+		data
+		.map(x => {
+			return Object.assign({
+				senderName: myMap[x.sender],
+				receiverName: myMap[x.receiver],
+			}, x);
+		});
+		return result;
+	}
 	
   return { // public interface
     getData: getData,
 	addDesc: addDesc,
 	checkRev: checkRev,
 	checkSend: checkSend,
-	getStringData: getStringData
+	getStringData: getStringData,
+	getPrettyFormatData: getPrettyFormatData
   };
 })();
 
