@@ -166,4 +166,4 @@ app.get('/downloadKudoHistory', function(req, res){
 });
 
 
-app.listen(5180, () => console.log('Node discord bot testing server instance started on port 80'));
+app.listen(80, () => console.log('Node discord bot testing server instance started on port 80'));
