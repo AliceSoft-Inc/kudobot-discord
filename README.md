@@ -1,7 +1,8 @@
 # kudobot-discord
 Prerequiste:
 1. Set up a discord bot following <a href="https://discordpy.readthedocs.io/en/latest/discord.html">instruction</a> in the first part, save your token.
-2. Inivite your bot to your discord server, take note of the server id
+2. Inivite your bot to your discord server, take note of the server id.
+3. Create a Role for the server named KudoBotAdmin, server members added to this role will become bot admin. (This should be done before booting up the bot.)
 
 Setup Instructions (AWS EC2):
 1. Prepare an AWS EC2 instance, clone this repo to your instance.
@@ -33,4 +34,27 @@ sudo npm install -g pm2
 sudo pm2 start index.js
 ```
 Your bot should now start successfully, you can test it by typing /help inside text channel in your server. <br />
-If anything went wrong, file a ticket to <a href="http://ec2-54-162-48-11.compute-1.amazonaws.com/">our ticket portal</a>.
+<br />
+Notes:
+1. Configure prize list in database/kudoPrize.json, sample format:
+```
+{"1":{
+    "name": "PS4 Pro",
+    "value": 300
+},
+"2":{
+    "name": "Logitech G815 RGB Mechanical Keyboard",
+    "value": 150
+}}
+```
+2. The following are configurable in botconfig.json:
+```
+kudoAmount: number of times that each person can give out kudo per refresh time unit
+prefix: bot trigger prefix
+kudoSendPt: amount of points that one can get from sending a kudo
+kudoRevPt: amount of points that one can get from receiving a kudo
+kudoDescMinimal: minimum length of kudo description
+refreshTime: how many time units(see below) before refreshing available kudo times
+refreshTimeUnit: available units {MINUTE, HOUR, DAY, MONTH}
+```
+To report a problem, file tickets at <a href="http://ec2-54-162-48-11.compute-1.amazonaws.com/">our ticket portal</a>.

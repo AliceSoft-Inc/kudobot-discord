@@ -1,13 +1,14 @@
 {
 	"token": "",
 	"serverId": "",
+	"kudoAmount": 10,
+	"adminRole": "KudoBotAdmin",
 	"prefix": "/",
 	"helptext" : "This is Kudo Bot",
-	"debug": true,
+	"debug": false,
 	"kudoSendPt": 1,
 	"kudoRevPt": 5,
 	"kudoDescMinimal": 10, 
-	"adminRole": "testRole1",
 	"refreshTime": 1,
 	"refreshTimeUnit" : "DAY"
 }

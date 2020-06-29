@@ -19,17 +19,17 @@ let lock = new Lock(); //Lock
 
 // Global cache (TODO: find a better solution)
 var userMap;
-var guildID_test = botconfig.serverId; // TODO: currently hard coded for test server. When release, replace all guildID_test to guildID.
+var guildID = botconfig.serverId; // TODO: currently hard coded for test server. When release, replace all guildID to guildID.
 
 client.on("ready", async() => {
-	client.user.setActivity(client.guilds.cache.get(guildID_test).name, { type: 'WATCHING'});
+	client.user.setActivity(client.guilds.cache.get(guildID).name, { type: 'WATCHING'});
 	
 	if (debugMode) console.log("\nFirst guild ID in cache: " + client.guilds.cache.keys().next().value); // Get guild ID here. For current usage, we only handle first guild.
 	// guildID = client.guilds.cache.keys().next().value;
 	
 	if (debugMode) console.log("\nCurrent guild role list:");
 
-	client.guilds.cache.get(guildID_test).roles.cache.forEach( role => {
+	client.guilds.cache.get(guildID).roles.cache.forEach( role => {
 		if (debugMode) console.log(`	Role ID: ${role.id}, Role: ${role.name}\n`);
 
 		// Initiate members kudo & info here. To specify further, revise logic here.
@@ -67,7 +67,7 @@ client.on("message", async message => {
 
 	if (message.channel.type === "dm") 
 		console.log("\nNew msg handler: \033[1;34mDM message\033[0m. From " + message.author.username);
-	else if(!message.guild.available || message.guild.id !== guildID_test) {
+	else if(!message.guild.available || message.guild.id !== guildID) {
 		console.log("\nNew msg handler: Not from target guild. Ignore.");
 		return;
 	}

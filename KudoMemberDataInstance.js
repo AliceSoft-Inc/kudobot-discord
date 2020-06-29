@@ -4,8 +4,9 @@ const fileEncoding = 'utf8';
 const error = require('./kudoErrors');
 const msg = require("./resource/botReturnMessageResource.js");
 const defaultVal = {};
+const botconfig = require("./botconfig.json");
 
-const kudo_init = 10;
+const kudo_init = botconfig.kudoAmount;
 
 
 var instance = (function() {
