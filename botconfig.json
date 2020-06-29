@@ -2,7 +2,7 @@
 	"token": "",
 	"serverId": "",
 	"prefix": "/",
-	"helptext" : "This is Kudo bot",
+	"helptext" : "This is Kudo Bot",
 	"debug": true,
 	"kudoSendPt": 1,
 	"kudoRevPt": 5,

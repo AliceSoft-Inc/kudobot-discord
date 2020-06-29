@@ -19,7 +19,7 @@ let lock = new Lock(); //Lock
 
 // Global cache (TODO: find a better solution)
 var userMap;
-var guildID_test = '719042359651729418'; // TODO: currently hard coded for test server. When release, replace all guildID_test to guildID.
+var guildID_test = botconfig.serverId; // TODO: currently hard coded for test server. When release, replace all guildID_test to guildID.
 
 client.on("ready", async() => {
 	client.user.setActivity(client.guilds.cache.get(guildID_test).name, { type: 'WATCHING'});
