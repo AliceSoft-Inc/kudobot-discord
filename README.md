@@ -33,4 +33,4 @@ sudo npm install -g pm2
 sudo pm2 start index.js
 ```
 Your bot should now start successfully, you can test it by typing /help inside text channel in your server. <br />
-If anything went wrong, file a ticket to <a href="http://ec2-54-162-48-11.compute-1.amazonaws.com/">our ticket portal</a>
+If anything went wrong, file a ticket to <a href="http://ec2-54-162-48-11.compute-1.amazonaws.com/">our ticket portal</a>.
