@@ -266,6 +266,8 @@ function handleEndorseReturn(inputMessage, authorID) {
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
 
+	for (let i = 3; i < inputMessage.length; i++) inputMessage[2] += " " + inputMessage[i];
+
 	if (inputMessage[2].length < botconfig.kudoDescMinimal) 
 		return `Minimal length for a comment is ${botconfig.kudoDescMinimal} characters. You now have ${inputMessage[2].length} characters. Try to write a bit more to your friend!`;
 	
@@ -450,7 +452,6 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 			return sendAndResolveStage(channel, authorID, `These are your sent kudos: \n${kudoDescData.checkSend(authorID, userMap)}`);
 			break;
 
-		// TODO: further test
 		case "6":
 			lock.releaseAndIncr(authorID);
 			return channel.send(`${printPrizeList()}\nYou current available kudo points: ${kudoMemberData.getUserPt(authorID)}\nReply an option index to claim!`)
@@ -511,6 +512,10 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 				});
 			break;
 
+		case "7":
+			return sendAndResolveStage(channel, authorID, printAdminList());
+			break;
+
 		default:
 			break;
 	}
@@ -530,6 +535,13 @@ function printMemberList() {
 	let retString = 'Member List: \n';
 	let members = kudoMemberData.getUserMap();
 	Object.keys(members).forEach(e => retString += `${members[e]}(${e}): \n    	permission: ${kudoAdminData.isAdmin(e)?"Admin":"User"},	kudo: ${kudoMemberData.getUserKudo(e)},	pt: ${kudoMemberData.getUserPt(e)}\n`);
+	return retString;
+}
+
+function printAdminList(){
+	let retString = 'Admin List: \n';
+	let admins = kudoAdminData.getAdminList();
+	admins.forEach(e => retString += `${userMap[e]} (${e})\n`);
 	return retString;
 }
 

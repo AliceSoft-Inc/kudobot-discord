@@ -45,6 +45,7 @@ Hi😆! This is kudo bot. You can choose following options here:
 4. Check my received kudos.
 5. Check my sent kudos.
 6. I want to claim a prize.
+7. Show admin list.
 
 To terminate, just type "${botconfig.prefix}cancel" at any time!
 `;
