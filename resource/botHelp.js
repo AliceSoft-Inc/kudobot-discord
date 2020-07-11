@@ -12,7 +12,7 @@ ${botconfig.prefix}kudoPt
 	--set <@User> <Set Pt>
 	--reset <@User>
 ${botconfig.prefix}kudo <@User> <Comment>
-${botconfig.prefix}kudo num
+${botconfig.prefix}kudo remain
 ${botconfig.prefix}kudoDesc
 	--checkRev <@User>
 	--checkSend <@User>
@@ -29,7 +29,7 @@ const helpMenu_public =
 Current Available:
 ${botconfig.prefix}kudoPt get
 ${botconfig.prefix}kudo <@User> <Comment>
-${botconfig.prefix}kudo num
+${botconfig.prefix}kudo remain
 ${botconfig.prefix}kudoDesc check
 ${botconfig.prefix}prize
 	--checklist

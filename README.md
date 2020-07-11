@@ -55,6 +55,6 @@ kudoSendPt: amount of points that one can get from sending a kudo
 kudoRevPt: amount of points that one can get from receiving a kudo
 kudoDescMinimal: minimum length of kudo description
 refreshTime: how many time units(see below) before refreshing available kudo times
-refreshTimeUnit: available units {MINUTE, HOUR, DAY, MONTH}
+refreshTimeUnit: available units {MINUTE, HOUR, DAY, WEEK, MONTH}
 ```
 To report a problem, file tickets at <a href="http://ec2-54-162-48-11.compute-1.amazonaws.com/">our ticket portal</a>.

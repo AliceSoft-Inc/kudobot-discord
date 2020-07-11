@@ -1,4 +1,4 @@
-//error
+// error
 const invalidAmountMsg = "error: Please enter a valid number for amount.";
 const negativePtMsg = "You have insufficient points, you can earn more kudo points by receiving kudos from others. Keep up the good work!";
 const userNotExistMsg = (id) => {return `error: User ${id} does not exist.`;};
@@ -6,9 +6,10 @@ const adminExistMsg = (id) => {return `error: Admin ${id} already existed.`;};
 const userNotAdminMsg = (id) => {return `error: User ${id} is not under admin permission.`;};
 const negativeKudoMsg = "You can no longer give out more kudos today, please try again tomorrow!";
 
-const invalidArgsMsg = "error: Please enter valid arguments.";
-const invalidUserIptMsg = "error: Please enter a valid username.";
-const permissionDeniedMsg = "Permission Denied: Please contact admin.";
+// errors with src
+const invalidArgsMsg = (src) => {return `${src}: Please enter valid arguments.`};
+const invalidUserIptMsg = (src) => {return `${src}: Please enter a valid username.`};
+const permissionDeniedMsg = (src) => {return `${src}: Permission Denied - Please contact admin.`};
 
 //warning
 const userAlreadyExistsMsg = (id) =>{return `Warning: User ${id} already exists.`;};

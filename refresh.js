@@ -1,4 +1,6 @@
-// TODO: further test
+// TODO: setTimeout has max INT32 limit. 
+// For now we expect active user will trigger the reset within 24 days, 
+// or the refreshRoutine will time out every 24 days.
 const kudoMemberData = require("./KudoMemberDataInstance.js"); //kudo member
 const {Worker, parentPort} = require('worker_threads');
 const botconfig = require("./botconfig.json");
@@ -7,14 +9,14 @@ var current, nextEvent, delay;
 resetTimestamp(); // initialize
 
 console.log(`Refresh Timer set on ${current}. First timeout delay: ${delay}`);
-var timer = setTimeout(refreshRoutine, delay);
+var timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
 
 function refreshRoutine() {
     var userMap = kudoMemberData.getUserMap();
     Object.keys(userMap).forEach(id => kudoMemberData.refresh(id, userMap[id]));
     clearTimeout(timer);
     resetTimestamp();
-    timer = setTimeout(refreshRoutine, delay);
+    timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
     if (botconfig.debug) console.log(`Worker: Refresh routine has just completed.`);
 }
 
@@ -29,22 +31,32 @@ function resetTimestamp () {
             nextEvent = new Date(current.getFullYear(), current.getMonth(), current.getDate(), current.getHours() + botconfig.refreshTime, 0, 0);
             break;
 
+        case "WEEK":
+            nextEvent = new Date(current.getFullYear(), current.getMonth(), current.getDate() + botconfig.refreshTime*7, 0, 0, 0);
+            break;
+
         case "MONTH":
             nextEvent = new Date(current.getFullYear(), current.getMonth() + botconfig.refreshTime, 1, 0, 0, 0);
             break;
 
+        case "DAY":
         default: // DAY
             nextEvent = new Date(current.getFullYear(), current.getMonth(), current.getDate() + botconfig.refreshTime, 0, 0, 0);
             break;
     }
     delay = nextEvent - current;
+    parentPort.postMessage(delay);
 }
 
-// TODO: add lock?
-parentPort.on('message', () => {
-    if (botconfig.debug) console.log("Worker: msg received from parent.");
-    clearTimeout(timer);
-    resetTimestamp();
-    timer = setTimeout(refreshRoutine, delay);
-    if (botconfig.debug) console.log(`Worker: Timer reset. New delay: ${delay}`);
+parentPort.on('message', (message) => {
+    if (botconfig.debug) console.log(`Worker: msg received from parent. Action: ${message.action}`);
+    switch (message.action) {
+        case "Reset timer":
+        default:
+            clearTimeout(timer);
+            resetTimestamp();
+            timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
+            if (botconfig.debug) console.log(`Worker: Timer reset. New delay: ${delay}`);
+            break;
+    }
 });

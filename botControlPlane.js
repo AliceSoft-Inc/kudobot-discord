@@ -16,6 +16,7 @@ const prefix = botconfig.prefix;
 
 const Lock = require("./StageLock.js");
 let lock = new Lock(); //Lock
+let refreshDelay = 0; // in seconds
 
 // Global cache (TODO: find a better solution)
 var userMap;
@@ -114,7 +115,7 @@ client.on("message", async message => {
 	}
 
 	if (debugMode) console.log(`Public interface: received command ${cmd}`);
-	refreshThread.postMessage("reset timer");
+	refreshThread.postMessage({action: "Reset timer"});
 
 	// cmd swich panel
 	switch (cmd) {
@@ -125,14 +126,14 @@ client.on("message", async message => {
 		case `${prefix}kudoAdmin`:
 			if (kudoAdminData.isAdmin(message.author.id))
 				return message.channel.send(handleKudoAdminReturn(messageArray, message.author.id));
-			else return message.channel.send(msg.permissionDeniedMsg);
+			else return message.channel.send(msg.permissionDeniedMsg("kudoAdmin"));
 			break;
 
 		case `${prefix}refresh`:
 			if(!messageArray[1]) 
 				return message.channel.send(msg.invalidArgsMsg);
 			else if (!validUserID(messageArray[1]))
-				return message.channel.send(msg.invalidUserIptMsg);
+				return message.channel.send(msg.invalidUserIptMsg("refresh"));
 			
 			var targetID = messageArray[1].slice(2, -1);
 
@@ -140,7 +141,7 @@ client.on("message", async message => {
 				kudoMemberData.refresh(targetID, userMap[targetID]);
 				return message.channel.send(`User ${userMap[targetID]} has been refreshed.`);
 			}
-			else return message.channel.send(msg.permissionDeniedMsg);
+			else return message.channel.send(msg.permissionDeniedMsg("refresh"));
 			break;
 		
 		// TODO: implement this method to success cases.
@@ -162,7 +163,7 @@ client.on("message", async message => {
 					return message.author.send(printMemberList());
 				}
 				else return message.channel.send(`Not a valid command, do you mean: \n${prefix}displayInfo all`);
-			else return message.channel.send(msg.permissionDeniedMsg);
+			else return message.channel.send(msg.permissionDeniedMsg("displayInfo"));
 			break;
 
 		case `${prefix}kudo`:
@@ -188,24 +189,24 @@ client.on("message", async message => {
 
 function handleKudoDescReturn(inputMessage, authorID){
 	if (!inputMessage[1])
-		return msg.invalidArgsMsg;
+		return msg.invalidArgsMsg("kudoDesc");
 
 	switch (inputMessage[1]) {
 		case "check":
 			if (inputMessage[2] === "mine" || !inputMessage[2])
 				return kudoDescData.checkRev(authorID, userMap) + '\n' + kudoDescData.checkSend(authorID, userMap);
-			else if (!validUserID(inputMessage[2])) return msg.invalidUserIptMsg;
+			else if (!validUserID(inputMessage[2])) return msg.invalidUserIptMsg("kudoDesc");
 			else return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap) + "\n" 
 				+ kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkRev":
 			if (!inputMessage[2])
-				return msg.invalidArgsMsg;
+				return msg.invalidArgsMsg("kudoDesc");
 			return kudoDescData.checkRev(inputMessage[2].slice(2, -1), userMap);
 
 		case "checkSend":
 			if (!inputMessage[2])
-				return msg.invalidArgsMsg;
+				return msg.invalidArgsMsg("kudoDesc");
 			return kudoDescData.checkSend(inputMessage[2].slice(2, -1), userMap);
 
 		default:
@@ -222,10 +223,10 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	if (debugMode) console.log("\n\033[1;34mAdmin Command: \033[0m" + inputMessage[1] + " by user " + authorID+".");
 	
 	if (!inputMessage[1] || !inputMessage[2])
-		return msg.invalidArgsMsg;
+		return msg.invalidArgsMsg("kudoAdmin");
 
 	if (!validUserID(inputMessage[2]))
-		return msg.invalidUserIptMsg;
+		return msg.invalidUserIptMsg("kudoAdmin");
 
 	var targetID = inputMessage[2].slice(2, -1);
 
@@ -235,7 +236,6 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 			break;
 
 		case "rmAdmin":
-			console.log(kudoAdminData.getAdminList().length);
 			if (kudoAdminData.getAdminList().length == 1)
 				return "Operation Rejected: Currently you are the last admin on list. Removal operation will be dismissed unless there is other admin available."
 			else return kudoAdminData.rmAdmin(targetID);
@@ -255,13 +255,13 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if (debugMode) console.log(inputMessage);
 
 	// TODO: ugly code
-	if (inputMessage[1] === "num") return kudoMemberData.getUserKudo(authorID);
+	if (inputMessage[1] === "remain") return printAvailableKudo(authorID);
 
 	if(!inputMessage[1] || !inputMessage[2])
-	return msg.invalidArgsMsg;
+	return msg.invalidArgsMsg("kudo");
 	
 	if (!validUserID(inputMessage[1]))
-		return msg.invalidUserIptMsg;
+		return msg.invalidUserIptMsg("kudo");
 
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
@@ -294,7 +294,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 	// Important: primary key for user database is currently based on user id.
 
 	if (!inputMessage[1])
-		return msg.invalidArgsMsg;
+		return msg.invalidArgsMsg("prize");
 
 	switch (inputMessage[1]) {
 		case "checklist":
@@ -302,7 +302,7 @@ function handlePrizeReturn(inputMessage, authorID) {
 	
 		case "claim":
 			if (!inputMessage[2])
-				return msg.invalidArgsMsg;
+				return msg.invalidArgsMsg("prize");
 			else if(!prizeData[inputMessage[2]])
 				return `error: Item not in prize list. Please recheck.`;
 			else {
@@ -320,10 +320,10 @@ function handlePrizeReturn(inputMessage, authorID) {
 function handleKudoPtReturn(inputMessage, authorID) {
 	if (!inputMessage[2])
 		inputMessage[2] = "<@"+authorID+">";
-	else if (!kudoAdminData.isAdmin(authorID)) 
-		return msg.permissionDeniedMsg;
+	// else if (!kudoAdminData.isAdmin(authorID)) 
+	// 	return msg.permissionDeniedMsg("kudoPt");
 	else if (!validUserID(inputMessage[2]))
-		return msg.invalidUserIptMsg;
+		return msg.invalidUserIptMsg("kudoPt");
 
 	var targetID = inputMessage[2].slice(2, -1);
 
@@ -333,27 +333,27 @@ function handleKudoPtReturn(inputMessage, authorID) {
 		
 		case "add":
 			if (!inputMessage[3])
-				return msg.invalidArgsMsg;
+				return msg.invalidArgsMsg("kudoPt");
 
 			if (kudoAdminData.isAdmin(authorID))
 				return `User ${userMap[authorID]} currently has ${kudoMemberData.addUserPt(targetID, inputMessage[3])} points.`;
 				
-			return msg.permissionDeniedMsg;
+			return msg.permissionDeniedMsg("kudoPt");
 
 		case "set":
 			if (!inputMessage[3])
-				return msg.invalidArgsMsg;
+				return msg.invalidArgsMsg("kudoPt");
 	
 			if (kudoAdminData.isAdmin(authorID)) 
 				return `User ${userMap[authorID]} currently has ${kudoMemberData.setUserPt(targetID, inputMessage[3])} points.`;
 				 
-			return msg.permissionDeniedMsg;
+			return msg.permissionDeniedMsg("kudoPt");
 
 		case "reset":
 			if (kudoAdminData.isAdmin(authorID)) 
 				return `User ${userMap[authorID]} has been reset to ${kudoMemberData.setUserPt(targetID, 0)} points.`;
 
-			return msg.permissionDeniedMsg;
+			return msg.permissionDeniedMsg("kudoPt");
 	
 		default:
 			if (kudoAdminData.isAdmin(authorID))
@@ -373,7 +373,7 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 
 	if (debugMode) console.log(`DM interface: received message "${inputMessage}".`);
 
-	refreshThread.postMessage("reset timer");
+	refreshThread.postMessage({action: "Reset timer"});
 
 	switch (inputMessage[0]) {
 		case `${prefix}kudo`:
@@ -441,7 +441,8 @@ function nonAdminDMinterface(inputMessage, authorID, channel) {
 			break;
 
 		case "3":
-			return sendAndResolveStage(channel, authorID, `You can still give ${kudoMemberData.getUserKudo(authorID)} kudos to others today!`);
+			
+			return sendAndResolveStage(channel, authorID, printAvailableKudo(authorID));
 			break;
 
 		case "4":
@@ -545,9 +546,45 @@ function printAdminList(){
 	return retString;
 }
 
+function printAvailableKudo(authorID) {
+	let period, ret;
+	switch (botconfig.refreshTimeUnit) {
+		case "MINUTE":
+			period = Math.ceil(refreshDelay/(60));
+			ret = `${period} ${(period > 1) ? "minutes" : "minute"}`;
+			break;
+		case "HOUR":
+			period = Math.ceil(refreshDelay/(60*60));
+			ret = `${period} ${(period > 1) ? "hours" : "hour"}`;
+			break;
+		case "WEEK":
+			period = Math.ceil(refreshDelay/(60*60*7));
+			ret = `${period} ${(period > 1) ? "weeks" : "week"}`;
+			break;
+		case "MONTH":
+			ret = `${botconfig.refreshTime} ${(botconfig.refreshTime > 1) ? "months" : "next month"}`;
+			break;
+		case "DAY":
+		default:
+			period = Math.ceil(refreshDelay/(60*60*24));
+			ret = `${period} ${(period > 1) ? "days" : "day"}`;
+			break;
+	}
+
+	console.log(`refreshDelay ${refreshDelay}`);
+	console.log(`period ${period}`);
+	
+	return `You can still give ${kudoMemberData.getUserKudo(authorID)} kudos to others! Limit will be reset in ${ret}.`;
+}
+
 function sendAndResolveStage(channel, authorID, message){
 	lock.release(authorID); 
 	channel.send(message);
 }
+
+refreshThread.once('message', (delay) => {
+	if (debugMode) console.log(`BCP: New Delay received from refreshThread: ${delay}.`);
+    refreshDelay = delay / 1000;  
+});
 
 client.login(botconfig.token);
