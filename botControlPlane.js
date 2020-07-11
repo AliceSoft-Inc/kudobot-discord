@@ -163,7 +163,17 @@ client.on("message", async message => {
 				if (messageArray[1] === "all") {
 					return message.author.send(printMemberList());
 				}
-				else return message.channel.send(`Not a valid command, do you mean: \n${prefix}displayInfo all`);
+				else if (message.mentions.users.size){
+					if (!validUserID(messageArray[1]))
+						return message.channel.send(msg.invalidUserIptMsg("displayInfo"));
+					let targetID = messageArray[1].slice(2, -1);
+					if (!userMap[targetID]) return message.channel.send(msg.userNotExistMsg(targetID));
+
+					return message.channel.send(
+						`${userMap[targetID]}(${targetID}):
+    	permission: ${kudoAdminData.isAdmin(targetID) ? "Admin" : "User"},	kudo: ${kudoMemberData.getUserKudo(targetID)},	pt: ${kudoMemberData.getUserPt(targetID)}\n`);
+				}
+				else return message.channel.send(`Not a valid command, do you mean: \n${prefix}displayInfo <all/@User>`);
 			else return message.channel.send(msg.permissionDeniedMsg("displayInfo"));
 			break;
 
@@ -173,13 +183,27 @@ client.on("message", async message => {
 				if (kudoAdminData.isAdmin(message.author.id))
 					return message.channel.send(help.helpMenu_admin);
 				else return message.channel.send(help.helpMenu_public);
-			else 
+			else {
+				for (let i = 3; i < messageArray.length; i++) messageArray[2] += " " + messageArray[i];
 				if (debugMode) return message.channel.send(handleEndorseReturn(messageArray, message.author.id));
 				else {
 					let ret = handleEndorseReturn(messageArray, message.author.id);
-					if (ret === msg.confirmed) return message.react('👍');
+					if (ret === msg.confirmed) {
+						message.mentions.users.first().send(`${userMap[message.author.id]} has just given you a kudo!
+Kudo message: ${messageArray[2]}
+You've received ${botconfig.kudoRevPt} kudo points.
+You now have ${kudoMemberData.getUserPt(message.mentions.users.firstKey())} kudo points in total!`
+						)
+						.catch((e)=>{
+							message.channel.send(`Failed to DM this User. But this action still got passed.`);
+							console.log(e);
+						});
+						return message.react('👍');
+					}
 					else message.channel.send(ret);
 				}
+			}
+				
 			break;
 
 		default:
@@ -229,7 +253,7 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	if (!validUserID(inputMessage[2]))
 		return msg.invalidUserIptMsg("kudoAdmin");
 
-	var targetID = inputMessage[2].slice(2, -1);
+	let targetID = inputMessage[2].slice(2, -1);
 
 	switch (inputMessage[1]) {
 		case "assignAdmin":
@@ -266,8 +290,6 @@ function handleEndorseReturn(inputMessage, authorID) {
 
 	var targetID = inputMessage[1].slice(2, -1);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
-
-	for (let i = 3; i < inputMessage.length; i++) inputMessage[2] += " " + inputMessage[i];
 
 	if (inputMessage[2].length < botconfig.kudoDescMinimal) 
 		return `Minimal length for a comment is ${botconfig.kudoDescMinimal} characters. You now have ${inputMessage[2].length} characters. Try to write a bit more to your friend!`;

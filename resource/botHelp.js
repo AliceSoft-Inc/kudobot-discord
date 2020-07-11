@@ -17,7 +17,7 @@ ${botconfig.prefix}kudoDesc
 	--checkRev <@User>
 	--checkSend <@User>
 	--check [mine/@User]
-${botconfig.prefix}displayInfo <all>
+${botconfig.prefix}displayInfo <all/@User>
 ${botconfig.prefix}prize
 	--checklist
 	--claim <PrizeEnum>
@@ -46,6 +46,7 @@ Hi😆! This is kudo bot. You can choose following options here:
 5. Check my sent kudos.
 6. I want to claim a prize.
 7. Show admin list.
+8. Rename my username. [Implementing]
 
 To terminate, just type "${botconfig.prefix}cancel" at any time!
 `;
