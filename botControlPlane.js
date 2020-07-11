@@ -74,6 +74,8 @@ client.on("message", async message => {
 	}
 	else console.log("\nNew msg handler: Message received from server: \033[1;34m" + message.guild.name + "\033[0m");
 
+	refreshThread.postMessage({action: "Reset timer"});
+
 	if (debugMode) console.log(
 		"Sender: \033[1;31m" + message.author.username + "\033[0m" +
 		"\nSenderID: " + message.author.id +
@@ -92,7 +94,7 @@ client.on("message", async message => {
 	let messageArray = message.content.split(/\s+/); // split by multiple spaces
 	let cmd = messageArray[0];
 
-	if (!kudoAdminData.isAdmin(message.author.id) && message.channel.type === "dm") {
+	if (message.channel.type === "dm") {
 		if (lock.acquire(message.author.id, 0))
 			if (cmd === `${prefix}kudo`){
 				if (debugMode) console.log("DM interface: Has been triggered! Now message are passing to dm interface.");
@@ -103,7 +105,7 @@ client.on("message", async message => {
 				return message.channel.send(`Invalid command or action timed out. Type ${prefix}kudo to get started`);;
 			}
 			
-		return nonAdminDMinterface(messageArray, message.author.id, message.channel);
+		return DMinterface(messageArray, message.author.id, message.channel);
 	}
 	else if(cmd[0] !== prefix) {
 		console.log("Msg Handler: Not a vaild command. Ignore.");
@@ -115,7 +117,6 @@ client.on("message", async message => {
 	}
 
 	if (debugMode) console.log(`Public interface: received command ${cmd}`);
-	refreshThread.postMessage({action: "Reset timer"});
 
 	// cmd swich panel
 	switch (cmd) {
@@ -367,20 +368,21 @@ ${prefix}kudoPt set <@User> <Set Pt>` ;
 }
 
 
-function nonAdminDMinterface(inputMessage, authorID, channel) {
+function DMinterface(inputMessage, authorID, channel) {
 	if(!lock.acquire(authorID, 1))
 		return;
 
 	if (debugMode) console.log(`DM interface: received message "${inputMessage}".`);
 
-	refreshThread.postMessage({action: "Reset timer"});
-
 	switch (inputMessage[0]) {
 		case `${prefix}kudo`:
 			// This is for "/kudo X" shortcut. When add cases, revise these lines.
-			if(inputMessage[1] > 0 && inputMessage[1] < 7) {
-				return nonAdminDMinterface(inputMessage[1], authorID, channel);
+			if(inputMessage[1] > 0 && inputMessage[1] < 8) {
+				return DMinterface(inputMessage[1], authorID, channel);
 			}
+
+			if (kudoAdminData.isAdmin(authorID)) 
+				channel.send(`For admin: This is non-admin interface. To access command line mode, go to public channel.`);
 
 			return channel.send(help.helpMenu_DM);
 			break;
