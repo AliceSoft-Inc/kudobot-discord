@@ -83,7 +83,7 @@ client.on("message", async message => {
 		"\nContent: \"" + message.content + "\""
 	)
 
-	// If content is null, a new user has come in to the channel.
+	// If content is null and no attachment with the msg, a new user has come in to the channel.
 	// TODO: handle existing user cases
 	if(!message.content && !message.attachments.size) {
 		kudoMemberData.refresh(message.author.id, message.author.username);
@@ -189,15 +189,6 @@ client.on("message", async message => {
 				else {
 					let ret = handleEndorseReturn(messageArray, message.author.id);
 					if (ret === msg.confirmed) {
-						message.mentions.users.first().send(`${userMap[message.author.id]} has just given you a kudo!
-Kudo message: ${messageArray[2]}
-You've received ${botconfig.kudoRevPt} kudo points.
-You now have ${kudoMemberData.getUserPt(message.mentions.users.firstKey())} kudo points in total!`
-						)
-						.catch((e)=>{
-							message.channel.send(`Failed to DM this User. But this action still got passed.`);
-							console.log(e);
-						});
 						return message.react('👍');
 					}
 					else message.channel.send(ret);
@@ -310,7 +301,21 @@ function handleEndorseReturn(inputMessage, authorID) {
 	
 	let ret3 = kudoDescData.addDesc(authorID, targetID, inputMessage[2]);
 
-	return ret3 === msg.successful ? msg.confirmed : ret3;
+	if (ret3 === msg.successful) {
+		client.users.resolve(targetID).send(`${userMap[authorID]} has just given you a kudo!
+Kudo message: ${inputMessage[2]}
+You've received ${botconfig.kudoRevPt} kudo points.
+You now have ${kudoMemberData.getUserPt(targetID)} kudo points in total!`
+		)
+		.catch((e) => {
+			console.log("\033[1;31mWarning:\033[0m Endorse Handler: Failed to DM target. But this action still got passed.");
+			console.log(e);
+		});
+
+		return msg.confirmed;
+	}
+
+	return ret3;
 }
 
 function handlePrizeReturn(inputMessage, authorID) {
@@ -388,7 +393,6 @@ ${prefix}kudoPt set <@User> <Set Pt>` ;
 			else return `Not a valid command, do you mean: \n${prefix}kudoPt get`;
 	}
 }
-
 
 function DMinterface(inputMessage, authorID, channel) {
 	if(!lock.acquire(authorID, 1))
