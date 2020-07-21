@@ -12,6 +12,9 @@ ${botconfig.prefix}kudoPt
 	--set <@User> <Set Pt>
 	--reset <@User>
 ${botconfig.prefix}kudo <@User> <Comment>
+${botconfig.prefix}kudoUser
+	--rmUser <@User>
+	--rename [@User] <New Name>
 ${botconfig.prefix}kudo remain
 ${botconfig.prefix}kudoDesc
 	--checkRev <@User>
@@ -31,6 +34,7 @@ ${botconfig.prefix}kudoPt get
 ${botconfig.prefix}kudo <@User> <Comment>
 ${botconfig.prefix}kudo remain
 ${botconfig.prefix}kudoDesc check
+${botconfig.prefix}kudoUser rename <New Name>
 ${botconfig.prefix}prize
 	--checklist
 	--claim <PrizeEnum>
@@ -46,7 +50,7 @@ Hi😆! This is kudo bot. You can choose following options here:
 5. Check my sent kudos.
 6. I want to claim a prize.
 7. Show admin list.
-8. Rename my username. [Implementing]
+8. I want to rename my username.
 
 To terminate, just type "${botconfig.prefix}cancel" at any time!
 `;

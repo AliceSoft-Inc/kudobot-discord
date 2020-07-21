@@ -20,7 +20,7 @@ var instance = (function() {
 	function createUser(userID,userName) {
 		data = dataUtil.read();
 		if (verifyUserID(userID))
-			return console.log(msg.userAlreadyExistsMsg(userID));
+			return msg.userAlreadyExistsMsg(userID);
 
 		data[userID] = {
 			userName: userName,
@@ -30,6 +30,30 @@ var instance = (function() {
 		dataUtil.write(data);
 
 		return msg.userCreationSuccessMsg(userID, userName);
+	}
+
+	function removeUser(userID) {
+		data = dataUtil.read();
+		if (!verifyUserID(userID))
+			return msg.userNotExistMsg(userID);
+
+		let userName = data[userID].userName;
+		delete data[userID];
+		dataUtil.write(data);
+
+		return msg.userDeletionSuccessMsg(userID, userName);
+	}
+
+	function editUsername(userID, userName) {
+		data = dataUtil.read();
+		if (!verifyUserID(userID))
+			return msg.userNotExistMsg(userID);
+
+		let previous = data[userID].userName;
+		data[userID].userName = userName;
+		dataUtil.write(data);
+
+		return msg.userNameChangedSuccessMsg(userID, previous, userName);
 	}
 	
 	function refresh(userID,userName) {
@@ -178,6 +202,8 @@ var instance = (function() {
 	setUserKudo: setUserKudo,
 	deductUserKudo: deductUserKudo,
 	createUser: createUser,
+	removeUser: removeUser,
+	editUsername: editUsername,
 	getUserMap: getUserMap,
 	refresh: refresh
   };

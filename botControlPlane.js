@@ -20,7 +20,7 @@ let refreshDelay = 0; // in seconds
 
 // Global cache (TODO: find a better solution)
 var userMap;
-var guildID = botconfig.serverId; // TODO: currently hard coded for test server. When release, replace all guildID to guildID.
+var guildID = botconfig.serverId;
 
 client.on("ready", async() => {
 	client.user.setActivity(client.guilds.cache.get(guildID).name, { type: 'WATCHING'});
@@ -39,7 +39,7 @@ client.on("ready", async() => {
 			if (debugMode) console.log(`Initiate members info: \n`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
-				kudoMemberData.createUser(member.user.id, member.user.username);
+				console.log(kudoMemberData.createUser(member.user.id, member.user.username)); 
 			});
 		}
 
@@ -48,7 +48,7 @@ client.on("ready", async() => {
 			if (debugMode) console.log(`	Admin under ${role.name}:`);
 			role.members.forEach(member => {
 				if (debugMode) console.log(`	${member.user.id}: ${member.user.username}`);
-				kudoAdminData.assignAdmin(member.user.id); 
+				console.log(kudoAdminData.assignAdmin(member.user.id)); 
 			});
 		}
 	});
@@ -136,7 +136,7 @@ client.on("message", async message => {
 			else if (!validUserID(messageArray[1]))
 				return message.channel.send(msg.invalidUserIptMsg("refresh"));
 			
-			var targetID = messageArray[1].slice(2, -1);
+			let targetID = retrieveUserID(messageArray[1]);
 
 			if (kudoAdminData.isAdmin(message.author.id)){
 				kudoMemberData.refresh(targetID, userMap[targetID]);
@@ -157,6 +157,10 @@ client.on("message", async message => {
 		case `${prefix}kudoDesc`:
 			return message.channel.send(handleKudoDescReturn(messageArray, message.author.id));
 			break;
+
+		case `${prefix}kudoUser`:
+			return message.channel.send(handleKudoUserReturn(messageArray, message.author.id));
+			break;
 		
 		case `${prefix}displayInfo`:
 			if (kudoAdminData.isAdmin(message.author.id)) 
@@ -166,7 +170,7 @@ client.on("message", async message => {
 				else if (message.mentions.users.size){
 					if (!validUserID(messageArray[1]))
 						return message.channel.send(msg.invalidUserIptMsg("displayInfo"));
-					let targetID = messageArray[1].slice(2, -1);
+					let targetID = retrieveUserID(messageArray[1]);
 					if (!userMap[targetID]) return message.channel.send(msg.userNotExistMsg(targetID));
 
 					return message.channel.send(
@@ -202,6 +206,54 @@ client.on("message", async message => {
 			break;
 	}
 });
+
+function handleKudoUserReturn(inputMessage, authorID) {
+	if (!inputMessage[1] || !inputMessage[2])
+		return msg.invalidArgsMsg("kudoUser");
+
+	let targetID = retrieveUserID(inputMessage[2]);
+
+	switch (inputMessage[1]) {
+		case "rmUser":
+			if (!validUserID(inputMessage[2]))
+				return msg.invalidUserIptMsg("kudoUser");
+
+			if (!kudoAdminData.isAdmin(authorID)) return msg.permissionDeniedMsg("kudoUser");
+			if (kudoAdminData.isAdmin(targetID)) return "Sorry, admin user cannot be removed.";
+			return kudoMemberData.removeUser(targetID);
+			break;
+		
+		case "rename":
+			if (!inputMessage[3]) {
+				// kudoUser rename <New Name>
+				if (!validUserID(inputMessage[2])) {
+					targetID = authorID;
+					inputMessage[3] = inputMessage[2];
+				} 
+				// kudoUser rename <@User> 
+				else return "Please enter your new username."; // TODO: ->msgRes
+			}
+
+			// non-admin can only rename himself
+			if (!kudoAdminData.isAdmin(authorID)) targetID = authorID;
+			
+			let ret =  kudoMemberData.editUsername(targetID,inputMessage[3]);
+
+			// reset map
+			userMap = kudoMemberData.getUserMap();
+
+			return ret;
+			break;
+
+		default:
+			if (kudoAdminData.isAdmin(authorID))
+				return `Not a valid command, do you mean: 
+${prefix}kudoUser rmUser [@User]
+${prefix}kudoUser rename [@User] <New Name>`;
+			else return `Not a valid command, do you mean: \n${prefix}kudoUser rename <New Name>`;
+			break;
+	}
+}
 
 function handleKudoDescReturn(inputMessage, authorID){
 	if (!inputMessage[1])
@@ -244,7 +296,7 @@ function handleKudoAdminReturn(inputMessage, authorID) {
 	if (!validUserID(inputMessage[2]))
 		return msg.invalidUserIptMsg("kudoAdmin");
 
-	let targetID = inputMessage[2].slice(2, -1);
+	let targetID = retrieveUserID(inputMessage[2]);
 
 	switch (inputMessage[1]) {
 		case "assignAdmin":
@@ -267,7 +319,7 @@ ${prefix}kudoAdmin rmAdmin <@User>`;
 }
 
 function handleEndorseReturn(inputMessage, authorID) {
-	// Important: primary key for user database is currently based on user id.
+	// Important: primary key for user database is currently user id.
 	if (debugMode) console.log(inputMessage);
 
 	// TODO: ugly code
@@ -279,7 +331,7 @@ function handleEndorseReturn(inputMessage, authorID) {
 	if (!validUserID(inputMessage[1]))
 		return msg.invalidUserIptMsg("kudo");
 
-	var targetID = inputMessage[1].slice(2, -1);
+	let targetID = retrieveUserID(inputMessage[1]);
 	if (targetID === authorID) return "Sorry, you cannot endorse yourself.";
 
 	if (inputMessage[2].length < botconfig.kudoDescMinimal) 
@@ -353,18 +405,23 @@ function handleKudoPtReturn(inputMessage, authorID) {
 	else if (!validUserID(inputMessage[2]))
 		return msg.invalidUserIptMsg("kudoPt");
 
-	var targetID = inputMessage[2].slice(2, -1);
+	let targetID = retrieveUserID(inputMessage[2]);
 
 	switch (inputMessage[1]) {
 		case "get":
-			return `User ${userMap[authorID]} currently has ${kudoMemberData.getUserPt(targetID)} points.`;
+			let ret = kudoMemberData.getUserPt(targetID);
+			if (typeof (ret) === "string") return ret;
+			return `User ${userMap[targetID]} currently has ${ret} points.`;
 		
 		case "add":
 			if (!inputMessage[3])
 				return msg.invalidArgsMsg("kudoPt");
 
-			if (kudoAdminData.isAdmin(authorID))
-				return `User ${userMap[authorID]} currently has ${kudoMemberData.addUserPt(targetID, inputMessage[3])} points.`;
+			if (kudoAdminData.isAdmin(authorID)) {
+				let ret = kudoMemberData.addUserPt(targetID, inputMessage[3]);
+				if (typeof (ret) === "string") return ret;
+				return `Success: User ${userMap[targetID]} currently has ${ret} points.`;
+			}
 				
 			return msg.permissionDeniedMsg("kudoPt");
 
@@ -372,14 +429,20 @@ function handleKudoPtReturn(inputMessage, authorID) {
 			if (!inputMessage[3])
 				return msg.invalidArgsMsg("kudoPt");
 	
-			if (kudoAdminData.isAdmin(authorID)) 
-				return `User ${userMap[authorID]} currently has ${kudoMemberData.setUserPt(targetID, inputMessage[3])} points.`;
+			if (kudoAdminData.isAdmin(authorID)) {
+				let ret = kudoMemberData.setUserPt(targetID, inputMessage[3]);
+				if (typeof (ret) === "string") return ret;
+				return `Success: User ${userMap[targetID]} currently has ${ret} points.`;
+			}
 				 
 			return msg.permissionDeniedMsg("kudoPt");
 
 		case "reset":
-			if (kudoAdminData.isAdmin(authorID)) 
-				return `User ${userMap[authorID]} has been reset to ${kudoMemberData.setUserPt(targetID, 0)} points.`;
+			if (kudoAdminData.isAdmin(authorID)) {
+				let ret = kudoMemberData.setUserPt(targetID, 0);
+				if (typeof (ret) === "string") return ret;
+				return `Success: User ${userMap[targetID]} has been reset to ${ret} points.`;
+			}
 
 			return msg.permissionDeniedMsg("kudoPt");
 	
@@ -403,7 +466,7 @@ function DMinterface(inputMessage, authorID, channel) {
 	switch (inputMessage[0]) {
 		case `${prefix}kudo`:
 			// This is for "/kudo X" shortcut. When add cases, revise these lines.
-			if(inputMessage[1] > 0 && inputMessage[1] < 8) {
+			if(inputMessage[1] > 0 && inputMessage[1] < 9) {
 				return DMinterface(inputMessage[1], authorID, channel);
 			}
 
@@ -437,6 +500,7 @@ function DMinterface(inputMessage, authorID, channel) {
 				}
 				userList += `${i+1}.   ${userNameList[i]}\n`;
 			};
+
 			lock.releaseAndIncr(authorID);
 			
 			return channel.send(userList)
@@ -485,8 +549,7 @@ function DMinterface(inputMessage, authorID, channel) {
 			lock.releaseAndIncr(authorID);
 			return channel.send(`${printPrizeList()}\nYou current available kudo points: ${kudoMemberData.getUserPt(authorID)}\nReply an option index to claim!`)
 				.then(() => {
-					if(!lock.acquire(authorID, 2))
-						return;
+					if(!lock.acquire(authorID, 2)) return;
 
 					let msgFilter = msg => (((msg.content[0] in prizeData) && (msg.content.length <= 2)) || msg.content === `${prefix}cancel`) && msg.author.id === authorID;
 					channel.awaitMessages(msgFilter, { maxProcessed: 3, max: 1, time: 60000, errors: ['processedLimit', 'time']}).then((collected)=>{
@@ -545,17 +608,41 @@ function DMinterface(inputMessage, authorID, channel) {
 			return sendAndResolveStage(channel, authorID, printAdminList());
 			break;
 
+		case "8":
+			lock.releaseAndIncr(authorID);
+			return channel.send(`Please enter your new username: `)
+				.then(() => {
+					if (!lock.acquire(authorID, 2)) return;
+
+					channel.awaitMessages(msg => msg.content !== `${prefix}cancel`, { maxProcessed: 1, max: 1, time: 60000, errors: ['processedLimit', 'time'] })
+						.then((collected) => {
+							sendAndResolveStage(channel, authorID, handleKudoUserReturn(['/kudoUser', `rename`, collected.first().content], authorID));
+						})
+						.catch((err) => {
+							sendAndResolveStage(channel, authorID, `Sorry, time has reached limit. Please try again.`);
+						});
+				});
+			break;
+
 		default:
 			break;
 	}
 }
 
+function retrieveUserID(inputMessage) {
+	let userID = inputMessage.slice(2, -1);
+	// Users with nickname
+	if (userID.startsWith('!')) userID = userID.slice(1);
+	return userID;
+}
+
 function validUserID(inputMessage) {
-	return (inputMessage.slice(0, 2) === "<@") && (inputMessage.slice(-1) === ">");
+	return (inputMessage.startsWith('<@') && inputMessage.endsWith('>'));
 }
 
 function printPrizeList() {
 	let retString = 'Prize List:\n';
+	if (!Object.keys(prizeData).length) return retString += `Currently no prize available.\n`;
 	Object.keys(prizeData).forEach(e => retString += `    ${e}.	${prizeData[e].name} 	= 	${prizeData[e].value} pts\n`);
 	return retString;
 }
