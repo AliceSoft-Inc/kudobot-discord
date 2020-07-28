@@ -74,7 +74,7 @@ client.on("message", async message => {
 	}
 	else console.log("\nNew msg handler: Message received from server: \033[1;34m" + message.guild.name + "\033[0m");
 
-	refreshThread.postMessage({action: "Reset timer"});
+	refreshThread.postMessage({action: "Reset delay"});
 
 	if (debugMode) console.log(
 		"Sender: \033[1;31m" + message.author.username + "\033[0m" +
@@ -485,7 +485,7 @@ function DMinterface(inputMessage, authorID, channel) {
 
 		case "2":
 			if (!kudoMemberData.getUserKudo(authorID))
-				return sendAndResolveStage(channel, authorID, msg.negativeKudoMsg);
+				return sendAndResolveStage(channel, authorID, printAvailableKudo(authorID));
 
 			let userList = 'Select your kudo target:\n';
 			let userNameList = Object.values(userMap);
@@ -686,10 +686,10 @@ function printAvailableKudo(authorID) {
 			break;
 	}
 
-	console.log(`refreshDelay ${refreshDelay}`);
-	console.log(`period ${period}`);
+	// console.log(`refreshDelay ${refreshDelay}`);
+	// console.log(`period ${period}`);
 	
-	return `You can still give ${kudoMemberData.getUserKudo(authorID)} kudos to others! Limit will be reset in ${ret}.`;
+	return `You currently can give ${kudoMemberData.getUserKudo(authorID)} kudos to others. Limit will be reset in ${ret}.`;
 }
 
 function sendAndResolveStage(channel, authorID, message){
@@ -697,7 +697,7 @@ function sendAndResolveStage(channel, authorID, message){
 	channel.send(message);
 }
 
-refreshThread.once('message', (delay) => {
+refreshThread.on('message', (delay) => {
 	if (debugMode) console.log(`BCP: New Delay received from refreshThread: ${delay}.`);
     refreshDelay = delay / 1000;  
 });

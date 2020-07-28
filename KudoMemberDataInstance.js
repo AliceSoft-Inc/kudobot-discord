@@ -19,8 +19,11 @@ var instance = (function() {
 
 	function createUser(userID,userName) {
 		data = dataUtil.read();
-		if (verifyUserID(userID))
+		if (verifyUserID(userID)) {
+			data[userID].kudo = kudo_init;
+			dataUtil.write(data);
 			return msg.userAlreadyExistsMsg(userID);
+		}
 
 		data[userID] = {
 			userName: userName,

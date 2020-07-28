@@ -8,7 +8,7 @@ const botconfig = require("./botconfig.json");
 var current, nextEvent, delay;
 resetTimestamp(); // initialize
 
-console.log(`Refresh Timer set on ${current}. First timeout delay: ${delay}`);
+console.log(`Refresh Timer set on ${current}. Next routine ${nextEvent}. First timeout delay: ${delay}`);
 var timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
 
 function refreshRoutine() {
@@ -48,15 +48,28 @@ function resetTimestamp () {
     parentPort.postMessage(delay);
 }
 
+function resetDelay () {
+    current = new Date();
+    delay = nextEvent - current;
+    parentPort.postMessage(delay);
+}
+
 parentPort.on('message', (message) => {
     if (botconfig.debug) console.log(`Worker: msg received from parent. Action: ${message.action}`);
     switch (message.action) {
         case "Reset timer":
-        default:
             clearTimeout(timer);
             resetTimestamp();
             timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
             if (botconfig.debug) console.log(`Worker: Timer reset. New delay: ${delay}`);
+            break;
+        
+        case "Reset delay":
+        default:
+            clearTimeout(timer);
+            resetDelay();
+            timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
+            if (botconfig.debug) console.log(`Worker: Delay reset. New delay: ${delay}`);
             break;
     }
 });
