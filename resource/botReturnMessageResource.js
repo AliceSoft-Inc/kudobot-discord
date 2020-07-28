@@ -4,7 +4,7 @@ const negativePtMsg = "You have insufficient points, you can earn more kudo poin
 const userNotExistMsg = (id) => {return `error: User ${id} does not exist.`;};
 const adminExistMsg = (id) => {return `Warning: Admin ${id} already existed.`;};
 const userNotAdminMsg = (id) => {return `error: User ${id} is not under admin permission.`;};
-// const negativeKudoMsg = "You can no longer give out more kudos today, please try again tomorrow!";
+const negativeKudoMsg = "You can no longer give out more kudos. Please check the limit.";
 
 // errors with src
 const invalidArgsMsg = (src) => {return `${src}: Please enter valid arguments.`};
@@ -35,7 +35,7 @@ module.exports = {
 	cancelled,
 	invalidAmountMsg,
 	negativePtMsg,
-	// negativeKudoMsg,
+	negativeKudoMsg,
 	userNotExistMsg,
 	adminExistMsg,
 	userNotAdminMsg,
