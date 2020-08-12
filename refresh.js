@@ -17,7 +17,7 @@ function refreshRoutine() {
     clearTimeout(timer);
     resetTimestamp();
     timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
-    if (botconfig.debug) console.log(`Worker: Refresh routine has just completed.`);
+    if (botconfig.debug) console.log(`Worker Thread: Refresh routine has just completed.`);
 }
 
 function resetTimestamp () {
@@ -61,7 +61,7 @@ parentPort.on('message', (message) => {
             clearTimeout(timer);
             resetTimestamp();
             timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
-            if (botconfig.debug) console.log(`Worker: Timer reset. New delay: ${delay}`);
+            if (botconfig.debug) console.log(`Worker Thread: Timer reset. New delay: ${delay}`);
             break;
         
         case "Reset delay":
@@ -69,7 +69,7 @@ parentPort.on('message', (message) => {
             clearTimeout(timer);
             resetDelay();
             timer = setTimeout(refreshRoutine, (delay < 0x7FFFFFFF) ? delay : 0x7FFFFFFF);
-            if (botconfig.debug) console.log(`Worker: Delay reset. New delay: ${delay}`);
+            if (botconfig.debug) console.log(`Worker Thread: Delay reset. New delay: ${delay}`);
             break;
     }
 });

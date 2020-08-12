@@ -45,7 +45,7 @@ const helpMenu_DM =
 Hi😆! This is kudo bot. You can choose following options here:
 1. Check my current kudo points.
 2. Give kudo to others.
-3. Check my current available kudo times.
+3. Check my current available kudo tokens.
 4. Check my received kudos.
 5. Check my sent kudos.
 6. I want to claim a prize.
