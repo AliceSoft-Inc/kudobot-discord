@@ -57,6 +57,6 @@ kudoDescMinimal: minimum length of kudo description
 refreshTime: how many time units(see below) before refreshing available kudo times
 refreshTimeUnit: available units {MINUTE, HOUR, DAY, WEEK, MONTH}
 ```
-~~To report a problem, file tickets at our ticket portal.
+~~To report a problem, file tickets at our ticket portal.~~
 
 Ticket portal closed, please use discord channel instead.
